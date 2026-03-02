@@ -29,9 +29,11 @@ jobs:
       - name: Deploy with Docker Compose
         run: |
           rm -f backend/leave/build/libs/*-plain.jar
-          
           SPRING_PROFILE=prod \
-          docker compose up -d --build
+          docker compose up -d --build \
+          DB_URL_PROD=${{ secrets.DB_URL_PROD }} \
+          DB_USERNAME=${{ secrets.DB_USERNAME }} \
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
 
       - name: Cleanup
         run: |
