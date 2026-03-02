@@ -22,7 +22,7 @@ jobs:
       - name: Build Backend with Gradle
         run: |
           # 1. 백엔드 폴더로 이동하여 빌드
-          cd backend
+          cd backend/leave
           chmod +x gradlew
           ./gradlew clean build -x test
 
