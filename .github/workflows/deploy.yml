@@ -30,10 +30,10 @@ jobs:
         run: |
           rm -f backend/leave/build/libs/*-plain.jar
           SPRING_PROFILE=prod \
-          docker compose up -d --build \
-          DB_URL_PROD=${{ secrets.DB_URL_PROD }} \
-          DB_USERNAME=${{ secrets.DB_USERNAME }} \
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+          DB_URL_PROD='${{ secrets.DB_URL_PROD }}' \
+          DB_USERNAME='${{ secrets.DB_USERNAME }}' \
+          DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+          docker compose up -d --build
 
       - name: Cleanup
         run: |
