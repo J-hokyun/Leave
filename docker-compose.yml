@@ -7,7 +7,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES=${SPRING_PROFILE} #
+      - SPRING_PROFILE=${SPRING_PROFILE}
       - DB_URL_PROD=${DB_URL_PROD}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
