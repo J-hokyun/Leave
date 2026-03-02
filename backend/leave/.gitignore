@@ -14,7 +14,6 @@ pom.xml.utils
 release.properties
 
 # 환경 설정 및 비밀값 (중요!)
-application-*.properties
 application-*.yml
 .env
 *.env

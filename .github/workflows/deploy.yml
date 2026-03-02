@@ -28,14 +28,8 @@ jobs:
 
       - name: Deploy with Docker Compose
         run: |
-          # 2. 백엔드 폴더 내의 Dockerfile과 Compose 파일 사용
-          cd backend
+          rm -f backend/leave/build/libs/*-plain.jar
           
-          # 3. 기존의 plain jar 삭제 (사내 로직 반영)
-          rm -f build/libs/*-plain.jar
-          
-          # 4. 환경 변수 주입 및 업데이트된 서비스만 재기동
-          # secrets에 저장된 값이 있다면 ${{ secrets.NAME }}으로 교체 가능합니다.
           SPRING_PROFILE=prod \
           docker compose up -d --build
 

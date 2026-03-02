@@ -7,7 +7,10 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILE=${SPRING_PROFILE}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILE} #
+      - DB_URL_PROD=${DB_URL_PROD}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
     restart: always
 
 # 나중에 DB나 Nginx를 추가하고 싶다면 이 아래에 더 붙이면 됩니다.
