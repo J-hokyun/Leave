@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-LeaveApplication<leave>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "project.leave.LeaveApplication",
+            "projectName": "leave",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

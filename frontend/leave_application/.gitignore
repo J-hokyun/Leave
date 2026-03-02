@@ -1,0 +1,36 @@
+# Flutter/Dart 관련
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Android 관련
+.gradle/
+local.properties
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+/android/key.properties
+
+# iOS 관련
+.generated/
+DerivedData/
+Pods/
+/.symlinks/
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+/ios/ServiceDefinitions.json
+*.moved-aside
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# IDE 설정 (VS Code, IntelliJ)
+.vscode/
+.idea/
+*.iml
+*.iws
+.DS_Store
