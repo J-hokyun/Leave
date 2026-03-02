@@ -1,0 +1,45 @@
+name: Leave Project Auto Deploy (Prod)
+
+on:
+  push:
+    branches: [ "master" ]  # 배포를 원하는 브랜치명
+
+jobs:
+  build-and-deploy:
+
+    runs-on: [self-hosted, prod] 
+    
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build Backend with Gradle
+        run: |
+          # 1. 백엔드 폴더로 이동하여 빌드
+          cd backend
+          chmod +x gradlew
+          ./gradlew clean build -x test
+
+      - name: Deploy with Docker Compose
+        run: |
+          # 2. 백엔드 폴더 내의 Dockerfile과 Compose 파일 사용
+          cd backend
+          
+          # 3. 기존의 plain jar 삭제 (사내 로직 반영)
+          rm -f build/libs/*-plain.jar
+          
+          # 4. 환경 변수 주입 및 업데이트된 서비스만 재기동
+          # secrets에 저장된 값이 있다면 ${{ secrets.NAME }}으로 교체 가능합니다.
+          SPRING_PROFILE=prod \
+          docker compose up -d --build
+
+      - name: Cleanup
+        run: |
+          # 사용하지 않는 오래된 이미지 삭제
+          docker image prune -f

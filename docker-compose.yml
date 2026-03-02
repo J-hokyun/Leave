@@ -1,0 +1,11 @@
+services:
+  vesta-backend:
+    build: .
+    container_name: vesta-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILE=${SPRING_PROFILE}
+    restart: always
+
+# 나중에 DB나 Nginx를 추가하고 싶다면 이 아래에 더 붙이면 됩니다.
