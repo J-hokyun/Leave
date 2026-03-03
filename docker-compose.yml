@@ -12,5 +12,8 @@ services:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
     restart: always
-
-# 나중에 DB나 Nginx를 추가하고 싶다면 이 아래에 더 붙이면 됩니다.
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"  
+        max-file: "3"     
