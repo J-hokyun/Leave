@@ -25,7 +25,7 @@ services:
       - "443:443" # HTTPS용
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      # - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     restart: always
     depends_on:
       - vesta-backend             
