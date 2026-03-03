@@ -17,7 +17,7 @@ services:
       options:
         max-size: "10m"  
         max-file: "3"
-nginx:
+  nginx:
     image: nginx:alpine
     container_name: nginx-proxy
     ports:
