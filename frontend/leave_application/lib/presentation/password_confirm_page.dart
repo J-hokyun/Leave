@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:leave_application/data/api/user_api.dart';
-import 'package:leave_application/presentation/common/footer.dart'; // 오타 수정: %08common -> common
+import 'package:leave_application/presentation/common/footer.dart';
 import 'package:logger/logger.dart';
 import 'package:leave_application/presentation/common/alert_utils.dart';
 import 'package:dio/dio.dart';
 
-var logger = Logger(
-  printer: PrettyPrinter(), // 로그를 보기 좋게 박스 형태로 출력해줌
-);
+var logger = Logger(printer: PrettyPrinter());
 
 class PasswordConfirmPage extends StatefulWidget {
   const PasswordConfirmPage({super.key});
@@ -119,14 +117,7 @@ class _PasswordConfirmPageState extends State<PasswordConfirmPage> {
     bool isFormValid = pwdStatus['isValid'] == true;
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () => context.pop(),
-        ),
-      ),
+      appBar: AppBar(backgroundColor: Colors.white, elevation: 0),
       body: Center(
         child: SingleChildScrollView(
           // 키보드 올라올 때 대비
