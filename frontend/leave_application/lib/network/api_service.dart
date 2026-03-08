@@ -6,7 +6,8 @@ class ApiService {
 
   ApiService() {
     // 공통 주소 설정
-    dio.options.baseUrl = 'http://localhost:8080';
+    // dio.options.baseUrl = 'http://localhost:8080'; -> 로컬용
+    dio.options.baseUrl = 'https://www.leavehistory.co.kr';
 
     // 시간 초과 설정 (선택)
     dio.options.connectTimeout = const Duration(seconds: 5);

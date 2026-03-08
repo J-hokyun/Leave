@@ -9,6 +9,7 @@ import 'package:leave_application/presentation/login_page.dart';
 import 'package:leave_application/presentation/join_page.dart';
 import 'package:leave_application/presentation/password_change_page.dart';
 import 'package:leave_application/presentation/splash_page.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 // 전역에서 접근 가능한 키
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -42,7 +43,7 @@ final GoRouter _router = GoRouter(
 void main() async {
   // Flutter 바인딩 초기화
   WidgetsFlutterBinding.ensureInitialized();
-  // 한국어 로컬 데이터 초기화 (ko_KR)
+  await Firebase.initializeApp();
   await initializeDateFormatting('ko_KR', null);
   runApp(const MyApp());
 }
