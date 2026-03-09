@@ -162,15 +162,17 @@ public class LeaveService {
     public void deleteHistory(DeleteHistoryRequest request)
     {
         log.debug("[LeaveService] deleteHistory uuid : {}, userId : {}, code : {}", request.getUuid(), request.getUserId(), request.getCode());
+        String parentId = getparetnId(request.getUuid());
 
-        leaveHistoryRepository.deleteByUuid(request.getUuid());
+        int deleteCount = leaveHistoryRepository.deleteByParentId(parentId);  
+
         LeaveDetail leaveDetail = leaveDetailRepository.findByUserIdAndCode(request.getUserId(), request.getCode()).orElse(null);
         
         if (leaveDetail == null){
             throw new ResourcesNotFoundException("삭제 중 오류가 생겼습니다. 다시 시도 하여 주세요");
         }
 
-        int newCount = Math.max(0, leaveDetail.getUsedCount() - 1 );
+        int newCount = Math.max(0, leaveDetail.getUsedCount() - deleteCount );
         leaveDetail.setUsedCount(newCount);
     }
 
@@ -244,5 +246,14 @@ public class LeaveService {
     public String getIdByUuid(UUID uuid)
     {   log.debug("[LeaveService] getId is start uuid is {}", uuid);
         return leaveHistoryRepository.findIdByUuid(uuid).orElse(null);
-    }    
+    }
+
+    private String getparetnId(UUID uuid)
+    {
+        log.debug("[] getparetnId is start ");
+        return leaveHistoryRepository.findParentId(uuid);
+
+    }
+    
+    
 }
