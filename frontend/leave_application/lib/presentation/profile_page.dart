@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:leave_application/data/api/user_api.dart';
+import 'package:leave_application/data/api/auth_api.dart';
 import 'package:leave_application/presentation/common/footer.dart';
 import 'package:dio/dio.dart';
 import 'package:leave_application/presentation/common/alert_utils.dart';
@@ -14,6 +15,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final UserApi _userApi = UserApi();
+  final AuthApi _authApi = AuthApi();
 
   // 가이드라인 상수
   final Color primaryColor = const Color(0xFF007AFF);
@@ -52,6 +54,20 @@ class _ProfilePageState extends State<ProfilePage> {
           _leaveCount = response.data['count'];
           _isLoading = false;
         });
+      }
+    } catch (e) {
+      debugPrint("프로필 로딩 에러: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // 로그아웃
+  Future<void> _fetchLogout() async {
+    try {
+      final response = await _authApi.logout();
+      if (response.statusCode == 200) {
+        await AlertUtils.showAlert(context, "로그아웃 되었습니다.");
+        context.go("/login");
       }
     } catch (e) {
       debugPrint("프로필 로딩 에러: $e");
@@ -103,6 +119,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       onTap: _showCountEditDialog, // 위에서 만든 함수 호출
                     ),
                   ),
+
+                  const SizedBox(height: 40),
+                  _buildLogoutButton(),
                 ],
               ),
             ),
@@ -117,6 +136,49 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Text(
         label,
         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  // 로그아웃버튼
+  Widget _buildLogoutButton() {
+    return GestureDetector(
+      onTap: _fetchLogout,
+      child: Container(
+        width: double.infinity,
+        height: 55,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFEBEE),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.red.shade100),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "로그아웃",
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.red, // 텍스트 빨간색
+              ),
+            ),
+            // 기존 _buildActionIcon 스타일을 유지하되 색상만 변경
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.logout_rounded,
+                size: 20,
+                color: Colors.red, // 아이콘 빨간색
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

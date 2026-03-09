@@ -35,35 +35,28 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     // 1. 401 혹은 403 에러 발생 시
     if (err.response?.statusCode == 401 || err.response?.statusCode == 403) {
-      logger.e("인증 에러 발생: ${err.response?.statusCode}");
+      logger.d("인증 에러 발생: ${err.response?.statusCode}");
 
       final BuildContext? currentContext = rootNavigatorKey.currentContext;
 
       if (currentContext != null) {
-        // 2. [수정] GoRouterState.of 대신 GoRouter 인스턴스에서 위치 확인
-        // 현재 위치가 이미 로그인 페이지라면 무한 루프 방지를 위해 중단
         final String location = GoRouter.of(
           currentContext,
         ).routeInformationProvider.value.uri.toString();
         if (location == '/login') {
           return handler.next(err);
         }
-
-        // 3. 알림창 띄우기
         await AlertUtils.showAlert(
           currentContext,
           "로그인이 만료되었습니다. 다시 로그인하여 주세요.",
         );
 
-        // 4. 토큰 삭제
         await storage.delete(key: 'ACCESS_TOKEN');
 
-        // 5. 로그인 페이지로 이동
         if (currentContext.mounted) {
           currentContext.go("/login");
         }
 
-        // 6. [중요] 에러를 처리했으므로 handler.resolve를 호출하거나 return하여 전파 중단
         return;
       }
     }

@@ -3,6 +3,7 @@ package project.leave.controller.auth;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.leave.dto.auth.JoinRequest;
@@ -26,7 +27,7 @@ public class AuthController {
     private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/login")
-    public ResponseEntity<?> postLoginControlleString(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> postLoginController(@RequestBody LoginRequest loginRequest) {
         log.debug("[AuthController] /login controller start ");
         log.debug("email : {}, password : {}", loginRequest.getEmail(), loginRequest.getPassword());
         String userId = authService.userLogin(loginRequest);
@@ -35,6 +36,13 @@ public class AuthController {
 
         return ResponseEntity.ok(new TokenResponse(token));
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> postLogoutController(HttpServletRequest request) {
+        log.debug("[AuthController] /logout controller start ");
+        return ResponseEntity.ok("");
+    }
+    
     
 
     @PostMapping("/join")

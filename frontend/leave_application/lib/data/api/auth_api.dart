@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:leave_application/network/api_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthApi {
   final Dio _dio = ApiService().dio;
@@ -15,6 +16,20 @@ class AuthApi {
       );
       return response;
     } on DioException catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> logout() async {
+    final storage = const FlutterSecureStorage();
+    try {
+      final response = await _dio.post('/api/auth/logout');
+      if (response.statusCode == 200) {
+        await storage.delete(key: 'ACCESS_TOKEN');
+      }
+      return response;
+    } on DioException catch (e) {
+      await storage.delete(key: 'ACCESS_TOKEN');
       rethrow;
     }
   }
