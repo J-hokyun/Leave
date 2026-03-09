@@ -7,6 +7,8 @@ import 'package:logger/logger.dart';
 import 'package:leave_application/data/api/leave_api.dart';
 import 'package:leave_application/presentation/common/alert_utils.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 var logger = Logger(
   printer: PrettyPrinter(), // 로그를 보기 좋게 박스 형태로 출력해줌
@@ -515,6 +517,7 @@ class _HomePageState extends State<HomePage> {
               initialDate: _startDate,
               firstDate: DateTime(2020),
               lastDate: DateTime(2030),
+              locale: const Locale('ko', 'KR'),
             );
             if (picked != null) {
               setState(() {
@@ -538,6 +541,7 @@ class _HomePageState extends State<HomePage> {
                   : _endDate,
               firstDate: _startDate,
               lastDate: DateTime(2030),
+              locale: const Locale('ko', 'KR'),
             );
             if (picked != null) setState(() => _endDate = picked);
           }),

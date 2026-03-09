@@ -132,7 +132,7 @@ class _CalenderPageState extends State<CalenderPage> {
           Container(
             padding: const EdgeInsets.only(top: 60, bottom: 20),
             decoration: const BoxDecoration(
-              color: Color(0xFFE8EFFF), // 요청하신 연한 파랑
+              color: Color(0xFFE8EFFF),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
@@ -149,10 +149,8 @@ class _CalenderPageState extends State<CalenderPage> {
               child: SizedBox(
                 width: double.infinity,
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start, // 모든 요소를 왼쪽으로 정렬
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. 선택된 날짜와 요일 (예: 24일 수요일)
                     Text(
                       "${_selectedDay.day}일 ${DateFormat('EEEE', 'ko_KR').format(_selectedDay)}",
                       style: const TextStyle(
@@ -382,17 +380,13 @@ class _CalenderPageState extends State<CalenderPage> {
     required String reason,
     required DateTime selectedDate,
   }) {
-    // 1. 전달받은 typeCode를 기반으로 초기 탭 설정
-    // 리스트의 인덱스와 서버의 typeCode(0:연차, 1:반차, 2:반반차)를 매칭합니다.
     final List<String> types = ['연차', '반차', '반반차'];
     int initialIndex = int.tryParse(typeCode) ?? 0;
     String currentSelectedType = types[initialIndex];
 
-    // 2. 날짜 포맷팅 (예: 2026.02.20)
     String formattedDate =
         "${selectedDate.year}.${selectedDate.month.toString().padLeft(2, '0')}.${selectedDate.day.toString().padLeft(2, '0')}";
 
-    // 사유 입력을 위한 컨트롤러 (기존 사유 주입)
     TextEditingController reasonController = TextEditingController(
       text: reason,
     );

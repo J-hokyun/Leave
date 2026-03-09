@@ -17,13 +17,16 @@ dependencies:
   go_router: ^14.6.1
   cupertino_icons: ^1.0.8
   table_calendar: ^3.0.9
-  intl: ^0.19.0
+  intl: ^0.20.2
   http: ^1.1.0
   logger: ^2.5.0
   dio: ^5.4.0
   flutter_secure_storage: ^9.0.0
   flutter_native_splash: ^2.4.0
   firebase_core: ^4.5.0
+  
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
