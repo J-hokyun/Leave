@@ -55,9 +55,11 @@ public interface LeaveHistoryRepository extends JpaRepository<LeaveHistory, Stri
                         SELECT *
                         FROM tb_leave_history
                         WHERE 1=1
-                        AND date >=  to_char(current_date, 'YYYYMMDD')
                         AND user_id = :userId
-                        ORDER BY date, id
+                        ORDER BY 
+                            ABS(CAST(date AS INTEGER) - CAST(to_char(current_date, 'YYYYMMDD') AS INTEGER)) ASC, 
+                            date DESC,
+                            id ASC
                         LIMIT 1
                     ) A 
                 INNER JOIN 
