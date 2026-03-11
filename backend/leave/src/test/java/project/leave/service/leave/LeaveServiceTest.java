@@ -36,7 +36,7 @@ public class LeaveServiceTest {
     @Autowired
     private LeaveDetailRepository leaveDetailRepository;
 
-    private String testUserId = "user2026021500002";
+    private String testUserId = "user2026031100001";
 
     @Test
     @DisplayName("연차 등록 건수 테스트 [단건]")
@@ -348,14 +348,14 @@ public class LeaveServiceTest {
         LeaveHistoryRequest historyRequest2 = LeaveHistoryRequest.builder()
         .startDate("20260216")
         .endDate("20260216")
-        .leaveTypeCode("1")
+        .leaveTypeCode("0")
         .leaveReason("휴가")
         .build();
 
         LeaveHistoryRequest historyRequest3 = LeaveHistoryRequest.builder()
         .startDate("20260217")
-        .endDate("20260217")
-        .leaveTypeCode("2")
+        .endDate("20260220")
+        .leaveTypeCode("0")
         .leaveReason("휴가")
         .build();
 
@@ -364,22 +364,22 @@ public class LeaveServiceTest {
         String historyId2 = leaveService.saveLeaveHisory(historyRequest2, testUserId);
         String historyId3 = leaveService.saveLeaveHisory(historyRequest3, testUserId);
 
-        UUID historyUuid1 = leaveService.getUuidById(historyId1);
-        UUID historyUuid2 = leaveService.getUuidById(historyId2);
+        leaveService.getUuidById(historyId1);
+        leaveService.getUuidById(historyId2);
         UUID historyUuid3 = leaveService.getUuidById(historyId3);
 
         // 2번째 히스토리 삭제.
         DeleteHistoryRequest request = DeleteHistoryRequest.builder()
-                                        .uuid(historyUuid2)
+                                        .uuid(historyUuid3)
                                         .userId(testUserId)
-                                        .code("1")
+                                        .code("0")
                                         .build();
         leaveService.deleteHistory(request);
         
         LeaveCountsResponse leaveCountsResponse = leaveService.getUserLeaveCounts(testUserId);
 
-        assertEquals(null, leaveService.getUuidById(historyId2));
-        assertEquals("1.25", leaveCountsResponse.getUsed());
-        assertEquals("13.75", leaveCountsResponse.getRemained());
+        assertEquals(null, leaveService.getUuidById(historyId3));
+        assertEquals("2", leaveCountsResponse.getUsed());
+        assertEquals("13", leaveCountsResponse.getRemained());
     }     
 }

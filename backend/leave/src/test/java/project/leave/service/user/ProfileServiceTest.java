@@ -24,9 +24,9 @@ public class ProfileServiceTest {
     @Autowired
     private AuthService authService;
 
-    private String testUserId = "user2026021500002";
-    private String testPassword = "12345678";
-    private String testUserEmail = "sptest@naver.com";
+    private String testUserId = "user2026031100001";
+    private String testPassword = "password3#";
+    private String testUserEmail = "test@naver.com";
 
     @Test
     @DisplayName("비밀번호 인증 테스트")
