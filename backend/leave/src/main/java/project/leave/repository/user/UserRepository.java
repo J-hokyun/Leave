@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -53,6 +54,10 @@ public interface UserRepository extends JpaRepository<User, String> {
     WHERE id = :userId
     """, nativeQuery = true)
     Map<String, Object> getUserLeaves(@Param("userId") String userId);
+
+    @Query(value = "DELETE FROM tb_users WHERE id = :userId", nativeQuery = true)
+    @Modifying
+    void deleteByuserId(@Param("userId") String userId);
 
     
     

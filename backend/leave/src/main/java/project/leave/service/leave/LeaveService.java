@@ -43,7 +43,7 @@ public class LeaveService {
         LeaveCountsResponse leaveCounts = new LeaveCountsResponse();
 
         User user = userRepository.findById(userId).orElse(null);
-        List<LeaveDetail>leaveDetails = leaveDetailRepository.getLeaveDetailList(userId);
+        List<LeaveDetail>leaveDetails = leaveDetailRepository.findAllByUserId(userId).orElse(null);
 
         Double used = calUsedLeave(leaveDetails);
         Double remained = user.getTotalLeaveCount() - used;

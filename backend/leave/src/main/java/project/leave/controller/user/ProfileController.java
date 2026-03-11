@@ -29,14 +29,14 @@ public class ProfileController {
     private final ProfileService profileService;
 
     @PostMapping("/valid")
-    public ResponseEntity<?> validPassword(@RequestBody PasswordValidRequest passwordValidRequest, @AuthenticationPrincipal String userId) {
+    public ResponseEntity<?> validPasswordController(@RequestBody PasswordValidRequest passwordValidRequest, @AuthenticationPrincipal String userId) {
         log.debug("[ProfileController] POST /api/user/valid ");
         profileService.validPassword(passwordValidRequest.getPassword(), userId);
         return ResponseEntity.ok("");
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<ProfileResponse> getUserProfile(@AuthenticationPrincipal String userId) {
+    public ResponseEntity<ProfileResponse> getUserProfileController(@AuthenticationPrincipal String userId) {
         log.debug("[ProfileController] GET /api/user/profile ");
 
         User user = profileService.getUserProfile(userId);
@@ -45,7 +45,7 @@ public class ProfileController {
     }
 
     @PostMapping("/profile/password")
-    public ResponseEntity<?> passwordChange(@RequestBody PasswordChangeRequest passwordChangeRequest, @AuthenticationPrincipal String userId) {
+    public ResponseEntity<?> passwordChangeController(@RequestBody PasswordChangeRequest passwordChangeRequest, @AuthenticationPrincipal String userId) {
         log.debug("[ProfileController] POST /api/user/password");
         profileService.changePassword(passwordChangeRequest, userId);
         return ResponseEntity.ok("");
@@ -53,11 +53,20 @@ public class ProfileController {
 
 
     @PostMapping("/profile/count")
-    public ResponseEntity<?> leaveCountChangEntity(@RequestBody CountChangeRequest countChangeRequest, @AuthenticationPrincipal String userId) {
+    public ResponseEntity<?> leaveCountController(@RequestBody CountChangeRequest countChangeRequest, @AuthenticationPrincipal String userId) {
         log.debug("[ProfileController] POST /api/profile/count");
         profileService.changeLeaveCount(countChangeRequest, userId);
         return ResponseEntity.ok("");
     }
+
+    @PostMapping("/profile/delete")
+    public ResponseEntity<?> deleteUserInformController(@AuthenticationPrincipal String userId) {
+        log.debug("[ProfileController] POST /api/profile/delete");
+        profileService.deleteUserInform(userId);
+        
+        return ResponseEntity.ok("");
+    }
+    
     
     
 }

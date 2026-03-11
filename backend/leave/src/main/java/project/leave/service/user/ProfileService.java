@@ -13,6 +13,8 @@ import project.leave.entity.user.User;
 import project.leave.global.error.exception.PasswordInvalidException;
 import project.leave.global.error.exception.PasswordMismatchException;
 import project.leave.global.error.exception.UserNotExistsException;
+import project.leave.repository.leave.LeaveDetailRepository;
+import project.leave.repository.leave.LeaveHistoryRepository;
 import project.leave.repository.user.UserRepository;
 
 @Service
@@ -20,6 +22,8 @@ import project.leave.repository.user.UserRepository;
 @RequiredArgsConstructor
 public class ProfileService {
     private final UserRepository userRepository;
+    private final LeaveDetailRepository leaveDetailRepository;
+    private final LeaveHistoryRepository leaveHistoryRepository;
     PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public User getUserProfile(String userId)
@@ -84,12 +88,29 @@ public class ProfileService {
         User user = userRepository.findByUserId(userId);
         if (user == null)
         {
-            log.debug("[AuthService] user is not exists");
+            log.debug("[ProfileService] user is not exists");
             throw new UserNotExistsException("존재하지 않는 사용자입니다.");
         }
 
         user.setTotalLeaveCount(countChangeRequest.getCount());
-    }    
+    }
+    
+    @Transactional
+    public void deleteUserInform(String userId){
+        log.debug("[ProfileService] start delete user inform");
+        
+        if (leaveDetailRepository.findAllByUserId(userId).orElse(null) != null)
+        {
+            leaveDetailRepository.deleteByuserId(userId);
+        }
+
+        if (leaveHistoryRepository.findAllByUserId(userId).orElse(null) != null)
+        {
+            leaveHistoryRepository.deleteByuserId(userId);
+        }
+        
+        userRepository.deleteByuserId(userId);
+    }
 
 
 }

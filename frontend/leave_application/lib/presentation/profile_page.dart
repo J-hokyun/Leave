@@ -75,6 +75,20 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // 로그아웃
+  Future<void> _fetchDelete() async {
+    try {
+      final response = await _userApi.deleteUserInform();
+      if (response.statusCode == 200) {
+        await AlertUtils.showAlert(context, "회원탈퇴 되었습니다.");
+        context.go("/login");
+      }
+    } catch (e) {
+      debugPrint("프로필 로딩 에러: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -119,9 +133,24 @@ class _ProfilePageState extends State<ProfilePage> {
                       onTap: _showCountEditDialog, // 위에서 만든 함수 호출
                     ),
                   ),
-
                   const SizedBox(height: 40),
                   _buildLogoutButton(),
+                  const Spacer(),
+
+                  // 회원탈퇴 버튼
+                  Center(
+                    child: TextButton(
+                      onPressed: _showDeleteConfirmDialog,
+                      child: const Text(
+                        "회원탈퇴",
+                        style: TextStyle(
+                          color: Colors.black,
+                          decoration: TextDecoration.underline, // 밑줄 추가
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -180,6 +209,44 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showDeleteConfirmDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text('회원 탈퇴', style: titleStyle.copyWith(color: Colors.red)),
+          content: const Text(
+            '정말 회원탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.',
+            style: TextStyle(fontSize: 14, color: Colors.black87),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('취소', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext); // 다이얼로그 닫기
+                _fetchDelete(); // 실제 삭제 함수 호출
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('탈퇴하기', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 

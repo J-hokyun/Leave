@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:leave_application/network/api_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class UserApi {
   final Dio _dio = ApiService().dio;
@@ -52,6 +53,19 @@ class UserApi {
       );
       return response;
     } on DioException catch (e) {
+      rethrow;
+    }
+  }
+
+  // 회원탈퇴 API
+  Future<Response> deleteUserInform() async {
+    final storage = const FlutterSecureStorage();
+    try {
+      final response = await _dio.post('/api/user/profile/delete');
+      await storage.delete(key: 'ACCESS_TOKEN');
+      return response;
+    } on DioException catch (e) {
+      await storage.delete(key: 'ACCESS_TOKEN');
       rethrow;
     }
   }

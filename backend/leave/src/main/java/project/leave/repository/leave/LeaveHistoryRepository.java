@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -35,6 +36,9 @@ public interface LeaveHistoryRepository extends JpaRepository<LeaveHistory, Stri
     @Query(value = "SELECT uuid FROM tb_leave_history WHERE id = :id", nativeQuery = true)
     Optional<UUID>  findUuidById(@Param("id") String id);
 
+    @Query(value = "SELECT * FROM tb_leave_history WHERE user_id = :userId", nativeQuery = true)
+    Optional<List<LeaveHistory>>findAllByUserId(@Param("userId") String userId);
+
     @Query(value = """
         SELECT COUNT(*)
         FROM tb_leave_history
@@ -43,6 +47,7 @@ public interface LeaveHistoryRepository extends JpaRepository<LeaveHistory, Stri
     int countByUserId(@Param("userId") String userId);
 
     @Query(value = "DELETE FROM tb_leave_history WHERE user_id = :userId", nativeQuery = true)
+    @Modifying
     void deleteByuserId(@Param("userId") String userId);
 
     @Query(value = """

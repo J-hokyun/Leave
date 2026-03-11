@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -36,9 +37,10 @@ public interface LeaveDetailRepository extends JpaRepository<LeaveDetail, String
     Optional<LeaveDetail> findByUserIdAndCode(@Param("userId") String userId, @Param("code") String code);
 
     @Query(value = "SELECT * FROM tb_leave_detail WHERE user_id = :userId", nativeQuery=true)
-    List<LeaveDetail>getLeaveDetailList(@Param("userId") String userId);
+    Optional<List<LeaveDetail>>findAllByUserId(@Param("userId") String userId);
 
     @Query(value = "DELETE FROM tb_leave_detail WHERE user_id = :userId", nativeQuery = true)
+    @Modifying
     void deleteByuserId(@Param("userId") String userId);
 
 
