@@ -69,9 +69,9 @@ public class LeaveService {
         String parentId = genereteHistoryId();
 
         if (!validLeftLeaveCount(userId, daysBetween, leaveRecordRequest.getLeaveTypeCode())){
-            throw new LeaveCountOverException("등록하려는 연차 갯수 보다 남은 연차갯수가 적습니다.");
+            throw new LeaveCountOverException("잔여 연차가 부족합니다.");
         }
-        
+
         for (int i = 0; i<=daysBetween; ++i)
         {
             LeaveHistory leaveHistory = LeaveHistory.builder()
