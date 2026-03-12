@@ -47,13 +47,11 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     @Query(value = """
     SELECT 
-        total_leave_count,
-        user_leave_count,
         remaining_leave_count
     FROM tb_users
     WHERE id = :userId
     """, nativeQuery = true)
-    Map<String, Object> getUserLeaves(@Param("userId") String userId);
+    Double findRemainCountByUserId(@Param("userId") String userId);
 
     @Query(value = "DELETE FROM tb_users WHERE id = :userId", nativeQuery = true)
     @Modifying

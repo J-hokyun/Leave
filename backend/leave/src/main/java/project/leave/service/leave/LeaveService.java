@@ -21,6 +21,7 @@ import project.leave.dto.leave.UsedHistoryResponse;
 import project.leave.entity.leave.LeaveDetail;
 import project.leave.entity.leave.LeaveHistory;
 import project.leave.entity.user.User;
+import project.leave.global.error.exception.LeaveCountOverException;
 import project.leave.global.error.exception.ResourcesNotFoundException;
 import project.leave.repository.leave.LeaveDetailRepository;
 import project.leave.repository.leave.LeaveHistoryRepository;
@@ -64,11 +65,13 @@ public class LeaveService {
         log.debug("[LeaveService] start to saveLeaveHisory");
         LocalDate start = convertDate(leaveRecordRequest.getStartDate());
         LocalDate end = convertDate(leaveRecordRequest.getEndDate());
-
         int daysBetween = Math.toIntExact(ChronoUnit.DAYS.between(start, end));
-
         String parentId = genereteHistoryId();
 
+        if (!validLeftLeaveCount(userId, daysBetween, leaveRecordRequest.getLeaveTypeCode())){
+            throw new LeaveCountOverException("등록하려는 연차 갯수 보다 남은 연차갯수가 적습니다.");
+        }
+        
         for (int i = 0; i<=daysBetween; ++i)
         {
             LeaveHistory leaveHistory = LeaveHistory.builder()
@@ -230,6 +233,34 @@ public class LeaveService {
         }
         log.debug("[LeaveService] user leave sum is : {}", leaveSum);
         return leaveSum;
+    }
+
+    /* 연차 등록전, 등록하려는 연차 갯수 검증 로직 */
+    private boolean validLeftLeaveCount(String userId, int daysBetween, String code){
+        User user = userRepository.findById(userId).orElse(null);
+        List<LeaveDetail>leaveDetails = leaveDetailRepository.findAllByUserId(userId).orElse(null);
+        if (leaveDetails == null){
+            return true;
+        }
+
+        Double used = calUsedLeave(leaveDetails);
+        Double remained = user.getTotalLeaveCount() - used;
+        Double saveCount = 0.0;
+
+        if (code.equals("0")){
+            saveCount = 1.0 * daysBetween;
+        }else if (code.equals("1")){
+            saveCount = 0.5 * daysBetween;
+        }else{
+            saveCount = 0.25 * daysBetween;
+        }
+
+        // 남은 연차 갯수 VS 등록하려는 연차갯수 비교
+        if (remained > saveCount){
+            return true;
+        }else{
+            return false;
+        }
     }
 
     /* UUID 생성 로직 */

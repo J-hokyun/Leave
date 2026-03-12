@@ -1,6 +1,7 @@
 package project.leave.service.leave;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,6 +22,7 @@ import project.leave.dto.leave.UsedHistoryRequest;
 import project.leave.dto.leave.UsedHistoryResponse;
 import project.leave.entity.leave.LeaveDetail;
 import project.leave.entity.leave.LeaveHistory;
+import project.leave.global.error.exception.LeaveCountOverException;
 import project.leave.repository.leave.LeaveDetailRepository;
 import project.leave.repository.leave.LeaveHistoryRepository;
 
@@ -63,8 +65,8 @@ public class LeaveServiceTest {
     void saveLeaveHisoriesTest()
     {
         LeaveHistoryRequest historyRequest = LeaveHistoryRequest.builder()
-        .startDate("20260215")
-        .endDate("20260218")
+        .startDate("20260301")
+        .endDate("20260315")
         .leaveTypeCode("0")
         .leaveReason("휴가")
         .build();
@@ -74,8 +76,24 @@ public class LeaveServiceTest {
 
 
         // 저장 건수 확인.
-        assertEquals(4, leaveHistoryRepository.countByUserId(testUserId));
-        assertEquals(4, leaveDetail.getUsedCount());
+        assertEquals(15, leaveHistoryRepository.countByUserId(testUserId));
+        assertEquals(15, leaveDetail.getUsedCount());
+    }
+
+    @Test
+    @DisplayName("연차 등록 실패 테스트(남은 연차 갯수 초과)")
+    void saveLeaveHisoriesFaliTest()
+    {
+        LeaveHistoryRequest historyRequest = LeaveHistoryRequest.builder()
+        .startDate("20260301")
+        .endDate("20260316")
+        .leaveTypeCode("0")
+        .leaveReason("휴가")
+        .build();
+
+        assertThrows(LeaveCountOverException.class, () -> {
+            leaveService.saveLeaveHisory(historyRequest, testUserId);
+        });
     }
 
     @Test

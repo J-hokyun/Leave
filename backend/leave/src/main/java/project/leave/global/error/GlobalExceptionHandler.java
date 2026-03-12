@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import lombok.extern.slf4j.Slf4j;
 import project.leave.dto.global.ErrorResponse;
 import project.leave.global.error.exception.DuplicateEmailException;
+import project.leave.global.error.exception.LeaveCountOverException;
 import project.leave.global.error.exception.PasswordInvalidException;
 import project.leave.global.error.exception.PasswordMismatchException;
 import project.leave.global.error.exception.ResourcesNotFoundException;
@@ -38,14 +39,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PasswordInvalidException.class)
     public ResponseEntity<ErrorResponse> handlePasswordInvalid(PasswordInvalidException e) {
         log.error("[GlobalExceptionHandler] password invalid: {}", e.getMessage());
-        return buildResponse(HttpStatus.CONFLICT,  e.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST,  e.getMessage());
     }
 
     // 자료 없는 예외
     @ExceptionHandler(ResourcesNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourcesNotFound(ResourcesNotFoundException e) {
         log.error("[GlobalExceptionHandler] Resource NotFound: {}", e.getMessage());
-        return buildResponse(HttpStatus.CONFLICT,  e.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND,  e.getMessage());
     }
 
     // 유저가 없는 예외
@@ -59,7 +60,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException e) {
         log.error("Database Error: {}", e.getMessage());
-        return buildResponse(HttpStatus.CONFLICT, "이미 존재하는 데이터입니다.");
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "이미 존재하는 데이터입니다.");
+    }
+
+    // 연차 갯수 오버 에러
+    @ExceptionHandler(LeaveCountOverException.class)
+    public ResponseEntity<ErrorResponse> handleLeaveCountOver(LeaveCountOverException e) {
+        log.error("Database Error: {}", e.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 
     // 공통 응답 생성 메서드
