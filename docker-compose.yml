@@ -12,6 +12,7 @@ services:
       - DB_URL_PROD=${DB_URL_PROD}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
+      - HOLI_API_KEY=${HOLI_API_KEY}
     restart: always
     logging:
       driver: "json-file"

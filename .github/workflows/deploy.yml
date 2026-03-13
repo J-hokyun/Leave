@@ -33,6 +33,7 @@ jobs:
           DB_URL_PROD='${{ secrets.DB_URL_PROD }}' \
           DB_USERNAME='${{ secrets.DB_USERNAME }}' \
           DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+          HOLI_API_KEY='${{ secrets.HOLI_API_KEY }}' \
           docker compose up -d --build
 
       - name: Cleanup
