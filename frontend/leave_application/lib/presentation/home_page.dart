@@ -7,8 +7,7 @@ import 'package:logger/logger.dart';
 import 'package:leave_application/data/api/leave_api.dart';
 import 'package:leave_application/presentation/common/alert_utils.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:intl/date_symbol_data_local.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 var logger = Logger(
   printer: PrettyPrinter(), // 로그를 보기 좋게 박스 형태로 출력해줌
@@ -23,7 +22,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final LeaveApi _leaveApi = LeaveApi();
-  late DateTime _selectedDay;
 
   bool _isLoading = false;
   bool _isInitialLoading = true;
@@ -42,6 +40,8 @@ class _HomePageState extends State<HomePage> {
 
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now();
+  List<String> _holidays = [];
+  final DateTime _focusedDay = DateTime.now();
 
   final TextEditingController _reasonController = TextEditingController();
 
@@ -187,15 +187,42 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } catch (e) {
-      logger.e("초기 데이터 로딩 실패: $e");
+      logger.e("나의 연차 계산 초기 호출 실패 : $e");
       setState(() => _isInitialLoading = false);
+    }
+  }
+
+  Future<void> _fetchHolidayInMonth(String month) async {
+    setState(() {
+      _holidays = [];
+      _isLoading = true;
+    });
+    try {
+      // month 변수는 '20260201' 형태라고 가정합니다.
+      final response = await _leaveApi.getHolidayInMonth(month: month);
+
+      if (response.statusCode == 200) {
+        // 서버 응답이 List<dynamic>인 경우 List<String>으로 변환
+        final List<dynamic> data = response.data;
+
+        setState(() {
+          _holidays = data.map((e) => e.toString()).toList();
+          _isInitialLoading = false; // 초기 로딩 완료 처리
+        });
+
+        logger.d("공휴일 로드 성공: $_holidays");
+      }
+    } catch (e) {
+      logger.e("해당 월에 존재하는 공휴일 조회 실패: $e");
+      setState(() => _isInitialLoading = false);
+    } finally {
+      setState(() => _isLoading = false); // 로딩 종료
     }
   }
 
   @override
   void initState() {
     super.initState();
-    _selectedDay = DateTime.now();
     _fetchLeaveCounts();
     _fetchCurrentUsedHistory();
   }
@@ -218,56 +245,13 @@ class _HomePageState extends State<HomePage> {
               _buildHistorySection(),
               const SizedBox(height: 24),
               // 최근 신청 내역
-              _buildRecentRequestsSection(),
+              _buildSaveLeaveSection(),
               const SizedBox(height: 24),
             ],
           ),
         ),
       ),
       bottomNavigationBar: const CustomFooter(currentIndex: '/home'),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                DateFormat('HH:mm').format(DateTime.now()),
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Hi, WelcomeBack',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () {},
-                color: Colors.grey,
-              ),
-              IconButton(
-                icon: const Icon(Icons.settings_outlined),
-                onPressed: () {},
-                color: Colors.grey,
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -454,7 +438,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildRecentRequestsSection() {
+  Widget _buildSaveLeaveSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -509,41 +493,15 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // --- 2. 시작일 선택 ---
-          _buildDateField("시작일", _startDate, () async {
-            final picked = await showDatePicker(
-              context: context,
-              initialDate: _startDate,
-              firstDate: DateTime(2020),
-              lastDate: DateTime(2030),
-              locale: const Locale('ko', 'KR'),
-            );
-            if (picked != null) {
-              setState(() {
-                _startDate = picked;
-                if (_endDate.isBefore(picked) || _selectedType != '연차') {
-                  _endDate = picked;
-                }
-              });
+          _buildDateField(
+            "시작일",
+            _startDate,
+            () => _showCalendar(context, true),
+          ),
+          _buildDateField("종료일", _endDate, () {
+            if (_selectedType == '연차') {
+              _showCalendar(context, false);
             }
-          }),
-
-          // --- 3. 종료일 선택 ---
-          _buildDateField("종료일", _endDate, () async {
-            // 요구사항: 연차일 때만 변경 가능, 반차/반반차는 반응 없음
-            if (_selectedType != '연차') return;
-
-            final picked = await showDatePicker(
-              context: context,
-              initialDate: _endDate.isBefore(_startDate)
-                  ? _startDate
-                  : _endDate,
-              firstDate: _startDate,
-              lastDate: DateTime(2030),
-              locale: const Locale('ko', 'KR'),
-            );
-            if (picked != null) setState(() => _endDate = picked);
           }),
 
           // --- 4. 사유 입력 ---
@@ -644,6 +602,187 @@ class _HomePageState extends State<HomePage> {
         ),
         const SizedBox(height: 16),
       ],
+    );
+  }
+
+  void _showCalendar(BuildContext context, bool isStartDate) {
+    // 1. 달력 제어를 위한 로컬 변수 설정
+    DateTime tempFocusedDay = isStartDate
+        ? _startDate
+        : (_endDate.isBefore(_startDate) ? _startDate : _endDate);
+
+    DateTime firstDate = isStartDate ? DateTime(2020) : _startDate;
+    DateTime lastDate = DateTime(2030);
+
+    // 2. 다이얼로그 오픈 전, 초기 화면을 위한 데이터 요청
+    _fetchHolidayInMonth(DateFormat('yyyyMM01').format(tempFocusedDay));
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        bool isFirstRender = true;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            if (isFirstRender) {
+              isFirstRender = false;
+              // 데이터가 들어올 때까지 잠시 기다렸다가 화면을 갱신합니다.
+              Future.delayed(Duration.zero, () {
+                if (context.mounted) setDialogState(() {});
+              });
+            }
+
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              backgroundColor: Colors.white,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                height: 520,
+                child: Column(
+                  children: [
+                    Text(
+                      isStartDate ? "시작일 선택" : "종료일 선택",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Expanded(
+                      child: TableCalendar(
+                        locale: 'ko_KR',
+                        firstDay: firstDate,
+                        lastDay: lastDate,
+                        // 중요: 변수로 관리해야 페이지 이동이 가능함
+                        focusedDay: tempFocusedDay,
+                        weekendDays: const [DateTime.saturday, DateTime.sunday],
+
+                        // 공휴일 판단 로직
+                        holidayPredicate: (day) {
+                          return _holidays.contains(
+                            DateFormat('yyyyMMdd').format(day),
+                          );
+                        },
+
+                        // 달력 이동 시 호출
+                        onPageChanged: (focusedDay) async {
+                          // (1) 달력 먼저 넘기기
+                          setDialogState(() => tempFocusedDay = focusedDay);
+
+                          // (2) 서버에서 데이터 가져올 때까지 기다리기 (함수 수정 없이 await)
+                          await _fetchHolidayInMonth(
+                            DateFormat('yyyyMM01').format(focusedDay),
+                          );
+
+                          // (3) [가장 중요] 데이터 로드 완료 후 다이얼로그만 다시 그리기
+                          if (context.mounted) {
+                            setDialogState(() {});
+                          }
+                        },
+
+                        selectedDayPredicate: (day) {
+                          return isSameDay(
+                            isStartDate ? _startDate : _endDate,
+                            day,
+                          );
+                        },
+
+                        onDaySelected: (selectedDay, focusedDay) {
+                          // HomePage의 상태를 업데이트
+                          setState(() {
+                            if (isStartDate) {
+                              _startDate = selectedDay;
+                              if (_endDate.isBefore(selectedDay) ||
+                                  _selectedType != '연차') {
+                                _endDate = selectedDay;
+                              }
+                            } else {
+                              _endDate = selectedDay;
+                            }
+                          });
+                          Navigator.pop(context);
+                        },
+
+                        // 디자인 커스텀
+                        calendarBuilders: CalendarBuilders(
+                          holidayBuilder: (context, day, focusedDay) {
+                            return Center(
+                              child: Text(
+                                '${day.day}',
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            );
+                          },
+                          defaultBuilder: (context, day, focusedDay) {
+                            if (day.weekday == DateTime.saturday ||
+                                day.weekday == DateTime.sunday) {
+                              return Center(
+                                child: Text(
+                                  '${day.day}',
+                                  style: const TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              );
+                            }
+                            return null;
+                          },
+                        ),
+                        headerStyle: const HeaderStyle(
+                          formatButtonVisible: false,
+                          titleCentered: true,
+                          titleTextStyle: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        daysOfWeekStyle: const DaysOfWeekStyle(
+                          weekendStyle: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        calendarStyle: const CalendarStyle(
+                          defaultTextStyle: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                          ),
+                          selectedDecoration: BoxDecoration(
+                            color: Color(0xFF007AFF),
+                            shape: BoxShape.circle,
+                          ),
+                          cellMargin: EdgeInsets.all(6),
+                          todayDecoration: BoxDecoration(
+                            color: Color(0xFFE8EFFF),
+                            shape: BoxShape.circle,
+                          ),
+                          todayTextStyle: TextStyle(
+                            color: Color(0xFF007AFF),
+                            fontWeight: FontWeight.bold,
+                          ),
+                          disabledTextStyle: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        "취소",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

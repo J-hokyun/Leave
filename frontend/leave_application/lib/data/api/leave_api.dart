@@ -117,6 +117,7 @@ class LeaveApi {
     }
   }
 
+  // 연차 삭제
   Future<Response> deleteHistory({
     required String uuid,
     required String userId,
@@ -126,6 +127,19 @@ class LeaveApi {
       final response = await _dio.post(
         '/api/leave/delete',
         data: {"uuid": uuid, "userId": "", "code": code},
+      );
+      return response;
+    } on DioException catch (e) {
+      rethrow;
+    }
+  }
+
+  /* 해당월에 존재하는 연휴조회 */
+  Future<Response> getHolidayInMonth({required String month}) async {
+    try {
+      final response = await _dio.get(
+        '/api/holiday/month',
+        queryParameters: {"month": month},
       );
       return response;
     } on DioException catch (e) {
