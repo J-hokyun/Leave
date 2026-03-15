@@ -45,8 +45,8 @@ public class LeaveServiceTest {
     void saveLeaveHisoryTest()
     {
         LeaveHistoryRequest historyRequest = LeaveHistoryRequest.builder()
-        .startDate("20260215")
-        .endDate("20260215")
+        .startDate("20260219")
+        .endDate("20260219")
         .leaveTypeCode("0")
         .leaveReason("휴가")
         .build();
@@ -77,7 +77,7 @@ public class LeaveServiceTest {
 
         // 저장 건수 확인.
         assertEquals(15, leaveHistoryRepository.countByUserId(testUserId));
-        assertEquals(15, leaveDetail.getUsedCount());
+        assertEquals(9, leaveDetail.getUsedCount());
     }
 
     @Test
@@ -101,8 +101,8 @@ public class LeaveServiceTest {
     void printUsedAndRemainedDaysTest()
     {
         LeaveHistoryRequest historyRequest1 = LeaveHistoryRequest.builder()
-        .startDate("20260215")
-        .endDate("20260218")
+        .startDate("20260218")
+        .endDate("20260222")
         .leaveTypeCode("0")
         .leaveReason("휴가")
         .build();
@@ -127,8 +127,8 @@ public class LeaveServiceTest {
 
         LeaveCountsResponse leaveCountsResponse = leaveService.getUserLeaveCounts(testUserId);
 
-        assertEquals("4.75", leaveCountsResponse.getUsed());
-        assertEquals("10.25", leaveCountsResponse.getRemained());
+        assertEquals("2.75", leaveCountsResponse.getUsed());
+        assertEquals("12.25", leaveCountsResponse.getRemained());
 
     }
     
@@ -357,22 +357,22 @@ public class LeaveServiceTest {
     void deleteHistoryTest()
     {
         LeaveHistoryRequest historyRequest1 = LeaveHistoryRequest.builder()
-        .startDate("20260215")
-        .endDate("20260215")
+        .startDate("20260223")
+        .endDate("20260223")
         .leaveTypeCode("0")
         .leaveReason("휴가")
         .build();
 
         LeaveHistoryRequest historyRequest2 = LeaveHistoryRequest.builder()
-        .startDate("20260216")
-        .endDate("20260216")
+        .startDate("20260224")
+        .endDate("20260224")
         .leaveTypeCode("0")
         .leaveReason("휴가")
         .build();
 
         LeaveHistoryRequest historyRequest3 = LeaveHistoryRequest.builder()
-        .startDate("20260217")
-        .endDate("20260220")
+        .startDate("20260225")
+        .endDate("20260225")
         .leaveTypeCode("0")
         .leaveReason("휴가")
         .build();
@@ -399,5 +399,21 @@ public class LeaveServiceTest {
         assertEquals(null, leaveService.getUuidById(historyId3));
         assertEquals("2", leaveCountsResponse.getUsed());
         assertEquals("13", leaveCountsResponse.getRemained());
-    }     
+    }
+    
+    @Test
+    @DisplayName("시작 ~ 종료일 구간 평일 계산 로직 테스트")
+    void calWeekDayCountTest(){
+        int result1 = leaveService.calWeekDay("20260227", "20260303");
+        int result2 = leaveService.calWeekDay("20260601", "20260605");
+        int result3 = leaveService.calWeekDay("20260313", "20260315");
+        int result4 = leaveService.calWeekDay("20260316", "20260316");
+        int result5 = leaveService.calWeekDay("20260316", "20260318");
+
+        assertEquals(2, result1);
+        assertEquals(4, result2);
+        assertEquals(1, result3);
+        assertEquals(1, result4);
+        assertEquals(3, result5);
+    }
 }

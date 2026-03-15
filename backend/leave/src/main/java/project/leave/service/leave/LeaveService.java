@@ -1,6 +1,7 @@
 package project.leave.service.leave;
 
 import java.text.DecimalFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -8,6 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import project.leave.entity.leave.LeaveHistory;
 import project.leave.entity.user.User;
 import project.leave.global.error.exception.LeaveCountOverException;
 import project.leave.global.error.exception.ResourcesNotFoundException;
+import project.leave.repository.leave.HolidayRepository;
 import project.leave.repository.leave.LeaveDetailRepository;
 import project.leave.repository.leave.LeaveHistoryRepository;
 import project.leave.repository.user.UserRepository;
@@ -32,6 +35,7 @@ import project.leave.repository.user.UserRepository;
 @RequiredArgsConstructor
 public class LeaveService {
 
+    private final HolidayRepository holidayRepository;
     private final LeaveHistoryRepository leaveHistoryRepository;
     private final LeaveDetailRepository leaveDetailRepository;
     private final UserRepository userRepository;
@@ -92,13 +96,15 @@ public class LeaveService {
 
         /* 연차 종류별 카운팅을 집계 테이블 반영 */
         LeaveDetail leaveDetail = getLeaveDetail(userId, leaveRecordRequest.getLeaveTypeCode());
+        int weekDaysCount = calWeekDay(leaveRecordRequest.getStartDate(), leaveRecordRequest.getEndDate());
+
         if (leaveDetail == null)
         {
             leaveDetail = LeaveDetail.builder()
             .id(generateDetailId())
             .userId(userId)
             .leaveTypeCode(leaveRecordRequest.getLeaveTypeCode())
-            .usedCount(daysBetween + 1)
+            .usedCount(weekDaysCount)
             .createdBy(userId)
             .createdAt(LocalDateTime.now())
             .updatedBy(userId)
@@ -107,7 +113,7 @@ public class LeaveService {
 
             leaveDetailRepository.save(leaveDetail);
         }else{
-            leaveDetail.addUsedCount(daysBetween + 1, userId);
+            leaveDetail.addUsedCount(weekDaysCount, userId);
         }
 
         return parentId;
@@ -254,13 +260,33 @@ public class LeaveService {
         }else{
             saveCount = 0.25 * daysBetween;
         }
-
         // 남은 연차 갯수 VS 등록하려는 연차갯수 비교
         if (remained > saveCount){
             return true;
         }else{
             return false;
         }
+    }
+
+    /* 연차희망 시작일 ~ 종료일 구간에 실제 평일 계산하는 로직 */
+    public int calWeekDay(String start, String end){
+        log.debug("[LeaveService] start cal weekday");
+        int result = 0;
+
+        LocalDate startDate = LocalDate.parse(start, formatter);
+        LocalDate endDate = LocalDate.parse(end, formatter);
+        
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)){
+            if (date.getDayOfWeek()==DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY){
+                continue;
+            }else if (holidayRepository.existsByDate(date.format(formatter))){
+                continue;
+            }else{
+                result++;
+            }
+        }
+        log.debug("[LeaveService] cal weekday result is : {}", result);
+        return result;
     }
 
     /* UUID 생성 로직 */
