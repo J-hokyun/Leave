@@ -148,10 +148,15 @@ public interface LeaveHistoryRepository extends JpaRepository<LeaveHistory, Stri
 
     void deleteByUuid(@Param("uuid") UUID uuid);
 
-    int deleteByParentId(@Param("paren") String parentId);
+    void deleteByParentId(@Param("paren") String parentId);
 
     @Query(value = """
             SELECT parent_id FROM tb_leave_history WHERE uuid = :uuid
             """, nativeQuery = true)
     String findParentId(@Param("uuid") UUID uuid);
+
+    @Query(value = """
+            SELECT date FROM tb_leave_history where parent_id = :parent_id
+            """, nativeQuery = true)
+    List<String>findAllDateByParentId(@Param("parent_id")String parentId);
 }
