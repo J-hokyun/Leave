@@ -28,6 +28,8 @@ class _CalenderPageState extends State<CalenderPage> {
   List<dynamic> _dailyHistoryList = [];
 
   List<DateTime> _leaveDays = [];
+  List<String> _holidays = [];
+  bool _isInitialLoading = true;
 
   Future<void> _getMonthlyList() async {
     try {
@@ -115,11 +117,43 @@ class _CalenderPageState extends State<CalenderPage> {
     }
   }
 
+  Future<void> _fetchHolidayInMonth(String month) async {
+    setState(() {
+      _holidays = [];
+      _isLoading = true;
+    });
+    try {
+      // month 변수는 '20260201' 형태라고 가정합니다.
+      final response = await _leaveApi.getHolidayInMonth(month: month);
+
+      if (response.statusCode == 200) {
+        // 서버 응답이 List<dynamic>인 경우 List<String>으로 변환
+        final List<dynamic> data = response.data;
+
+        setState(() {
+          _holidays = data.map((e) => e.toString()).toList();
+          _isInitialLoading = false; // 초기 로딩 완료 처리
+        });
+
+        logger.d("공휴일 로드 성공: $_holidays");
+      }
+    } catch (e) {
+      logger.e("해당 월에 존재하는 공휴일 조회 실패: $e");
+      setState(() => _isInitialLoading = false);
+    } finally {
+      setState(() => _isLoading = false); // 로딩 종료
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _getMonthlyList();
     _getHistoryByDate(_selectedDay);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // _focusedDay가 정의되어 있는 클래스 멤버 변수라고 가정합니다.
+      _fetchHolidayInMonth(DateFormat('yyyyMM01').format(_focusedDay));
+    });
   }
 
   @override
@@ -213,18 +247,6 @@ class _CalenderPageState extends State<CalenderPage> {
             ),
           ),
         ),
-
-        // 수정/삭제 아이콘 (연한 파란색 동그라미 배경)
-        // _buildActionIcon(
-        //   Icons.edit_outlined,
-        //   onTap: () => _showEditSheet(
-        //     context: context,
-        //     uuid: uuid,
-        //     typeCode: typeCode,
-        //     reason: reason,
-        //     selectedDate: _selectedDay,
-        //   ),
-        // ),
         const SizedBox(width: 10),
         _buildActionIcon(
           Icons.delete_outline,
@@ -258,6 +280,10 @@ class _CalenderPageState extends State<CalenderPage> {
       focusedDay: _focusedDay,
       selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
 
+      holidayPredicate: (day) {
+        return _holidays.contains(DateFormat('yyyyMMdd').format(day));
+      },
+
       /* 날짜 터치 했을 때 */
       onDaySelected: (selectedDay, focusedDay) {
         setState(() {
@@ -277,6 +303,7 @@ class _CalenderPageState extends State<CalenderPage> {
         });
         _getMonthlyList();
         _getHistoryByDate(firstDayOfMonth);
+        _fetchHolidayInMonth(DateFormat('yyyyMM01').format(focusedDay));
       },
 
       // --- 이벤트(파란 점) 설정 ---
@@ -288,6 +315,14 @@ class _CalenderPageState extends State<CalenderPage> {
       },
 
       calendarBuilders: CalendarBuilders(
+        holidayBuilder: (context, day, focusedDay) {
+          return Center(
+            child: Text(
+              '${day.day}',
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
+        },
         markerBuilder: (context, date, events) {
           if (events.isNotEmpty) {
             return Positioned(
