@@ -273,7 +273,8 @@ public class LeaveService {
             saveCount = 0.25 * weekDaysCount;
         }
         // 남은 연차 갯수 VS 등록하려는 연차갯수 비교
-        if (remained > saveCount){
+        log.debug("[validLeftLeaveCount] remained : {}, saveCount : {} ", remained, saveCount);
+        if (remained >= saveCount){
             return true;
         }else{
             return false;
