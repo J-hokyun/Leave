@@ -219,26 +219,26 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _socialIcon(String label) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0F4FF),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF4851FF),
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _socialIcon(String label) {
+  //   return Container(
+  //     width: 48,
+  //     height: 48,
+  //     decoration: BoxDecoration(
+  //       color: const Color(0xFFF0F4FF),
+  //       shape: BoxShape.circle,
+  //     ),
+  //     child: Center(
+  //       child: Text(
+  //         label,
+  //         style: const TextStyle(
+  //           fontSize: 18,
+  //           fontWeight: FontWeight.bold,
+  //           color: Color(0xFF4851FF),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildInputLabel(String label) {
     return Padding(

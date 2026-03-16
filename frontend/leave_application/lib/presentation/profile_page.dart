@@ -65,8 +65,10 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _fetchLogout() async {
     try {
       final response = await _authApi.logout();
+      if (!mounted) return;
       if (response.statusCode == 200) {
         await AlertUtils.showAlert(context, "로그아웃 되었습니다.");
+        if (!mounted) return;
         context.go("/login");
       }
     } catch (e) {
@@ -79,8 +81,11 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _fetchDelete() async {
     try {
       final response = await _userApi.deleteUserInform();
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         await AlertUtils.showAlert(context, "회원탈퇴 되었습니다.");
+        if (!mounted) return;
         context.go("/login");
       }
     } catch (e) {
@@ -347,7 +352,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     count: enteredCount,
                   );
 
-                  if (!mounted) return;
+                  if (!dialogContext.mounted) return;
 
                   if (response.statusCode == 200 ||
                       response.statusCode == 201) {
