@@ -71,7 +71,10 @@ public class LeaveService {
         int daysBetween = Math.toIntExact(ChronoUnit.DAYS.between(start, end));
         String parentId = genereteHistoryId();
 
-        if (!validLeftLeaveCount(userId, daysBetween, leaveRecordRequest.getLeaveTypeCode())){
+        /* 주말 및 공휴일을 제외한 평일만 카운팅한 변수 */
+        int weekDaysCount = calWeekDay(leaveRecordRequest.getStartDate(), leaveRecordRequest.getEndDate());
+
+        if (!validLeftLeaveCount(userId, weekDaysCount, leaveRecordRequest.getLeaveTypeCode())){
             throw new LeaveCountOverException("잔여 연차가 부족합니다.");
         }
 
@@ -95,8 +98,6 @@ public class LeaveService {
 
         /* 연차 종류별 카운팅을 집계 테이블 반영 */
         LeaveDetail leaveDetail = getLeaveDetail(userId, leaveRecordRequest.getLeaveTypeCode());
-        int weekDaysCount = calWeekDay(leaveRecordRequest.getStartDate(), leaveRecordRequest.getEndDate());
-
         if (leaveDetail == null)
         {
             leaveDetail = LeaveDetail.builder()
@@ -252,9 +253,10 @@ public class LeaveService {
     }
 
     /* 연차 등록전, 등록하려는 연차 갯수 검증 로직 */
-    private boolean validLeftLeaveCount(String userId, int daysBetween, String code){
+    private boolean validLeftLeaveCount(String userId, int weekDaysCount, String code){
         User user = userRepository.findById(userId).orElse(null);
         List<LeaveDetail>leaveDetails = leaveDetailRepository.findAllByUserId(userId).orElse(null);
+
         if (leaveDetails == null){
             return true;
         }
@@ -264,11 +266,11 @@ public class LeaveService {
         Double saveCount = 0.0;
 
         if (code.equals("0")){
-            saveCount = 1.0 * daysBetween;
+            saveCount = 1.0 * weekDaysCount;
         }else if (code.equals("1")){
-            saveCount = 0.5 * daysBetween;
+            saveCount = 0.5 * weekDaysCount;
         }else{
-            saveCount = 0.25 * daysBetween;
+            saveCount = 0.25 * weekDaysCount;
         }
         // 남은 연차 갯수 VS 등록하려는 연차갯수 비교
         if (remained > saveCount){
