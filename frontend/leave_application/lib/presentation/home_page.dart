@@ -605,7 +605,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showCalendar(BuildContext context, bool isStartDate) {
+  void _showCalendar(BuildContext context, bool isStartDate) async {
     // 1. 달력 제어를 위한 로컬 변수 설정
     DateTime tempFocusedDay = isStartDate
         ? _startDate
@@ -615,7 +615,7 @@ class _HomePageState extends State<HomePage> {
     DateTime lastDate = DateTime(2030);
 
     // 2. 다이얼로그 오픈 전, 초기 화면을 위한 데이터 요청
-    _fetchHolidayInMonth(DateFormat('yyyyMM01').format(tempFocusedDay));
+    await _fetchHolidayInMonth(DateFormat('yyyyMM01').format(tempFocusedDay));
 
     showDialog(
       context: context,
