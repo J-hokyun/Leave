@@ -1,6 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:leave_application/network/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:logger/logger.dart';
+
+var logger = Logger(
+  printer: PrettyPrinter(), // 로그를 보기 좋게 박스 형태로 출력해줌
+);
 
 class AuthApi {
   final Dio _dio = ApiService().dio;
@@ -16,6 +21,7 @@ class AuthApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("POST /api/auth/login exception : $e");
       rethrow;
     }
   }
@@ -29,6 +35,7 @@ class AuthApi {
       }
       return response;
     } on DioException catch (e) {
+      logger.d("POST /api/auth/logout exception : $e");
       await storage.delete(key: 'ACCESS_TOKEN');
       rethrow;
     }
@@ -52,6 +59,7 @@ class AuthApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("POST /api/auth/join exception : $e");
       rethrow;
     }
   }

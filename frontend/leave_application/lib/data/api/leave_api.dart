@@ -1,6 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:leave_application/network/api_service.dart';
 import 'package:intl/intl.dart';
+import 'package:logger/logger.dart';
+
+var logger = Logger(
+  printer: PrettyPrinter(), // 로그를 보기 좋게 박스 형태로 출력해줌
+);
 
 class LeaveApi {
   final Dio _dio = ApiService().dio;
@@ -24,6 +29,7 @@ class LeaveApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("POST /api/eave/history exception : $e");
       rethrow;
     }
   }
@@ -34,6 +40,7 @@ class LeaveApi {
       final response = await _dio.get('/api/leave/count');
       return response;
     } on DioException catch (e) {
+      logger.d("GET /api/eave/count exception : $e");
       rethrow;
     }
   }
@@ -51,6 +58,7 @@ class LeaveApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("GET /api/leave/current exception : $e");
       rethrow;
     }
   }
@@ -68,6 +76,7 @@ class LeaveApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("GET /api/leave/next exception : $e");
       rethrow;
     }
   }
@@ -85,6 +94,7 @@ class LeaveApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("GET /api/leave/prev exception : $e");
       rethrow;
     }
   }
@@ -99,6 +109,7 @@ class LeaveApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("GET /api/leave/monthly exception : $e");
       rethrow;
     }
   }
@@ -113,6 +124,7 @@ class LeaveApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("GET /api/leave/history exception : $e");
       rethrow;
     }
   }
@@ -130,6 +142,7 @@ class LeaveApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("POST /api/leave/delete exception : $e");
       rethrow;
     }
   }
@@ -143,6 +156,7 @@ class LeaveApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("GET /api/holiday/month exception : $e");
       rethrow;
     }
   }

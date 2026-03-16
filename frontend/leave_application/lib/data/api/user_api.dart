@@ -1,6 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:leave_application/network/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:logger/logger.dart';
+
+var logger = Logger(
+  printer: PrettyPrinter(), // 로그를 보기 좋게 박스 형태로 출력해줌
+);
 
 class UserApi {
   final Dio _dio = ApiService().dio;
@@ -14,6 +19,7 @@ class UserApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("POST /api/user/valid exception : $e");
       rethrow;
     }
   }
@@ -24,6 +30,7 @@ class UserApi {
       final response = await _dio.get('/api/user/profile');
       return response; // 여기 안에 email, count(연차갯수) 값잇음
     } on DioException catch (e) {
+      logger.d("GET /api/user/profile exception : $e");
       rethrow;
     }
   }
@@ -40,6 +47,7 @@ class UserApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("POST /api/user/profile/password exception : $e");
       rethrow;
     }
   }
@@ -53,6 +61,7 @@ class UserApi {
       );
       return response;
     } on DioException catch (e) {
+      logger.d("POST /api/user/profile/count exception : $e");
       rethrow;
     }
   }
@@ -65,6 +74,7 @@ class UserApi {
       await storage.delete(key: 'ACCESS_TOKEN');
       return response;
     } on DioException catch (e) {
+      logger.d("POST /api/user/profile/delete exception : $e");
       await storage.delete(key: 'ACCESS_TOKEN');
       rethrow;
     }
