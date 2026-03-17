@@ -22,21 +22,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 1. CSRF 비활성화 (앱 환경에서는 세션을 쓰지 않으므로 보통 비활성화함)
             .csrf(csrf -> csrf.disable())
-
-            // 2. 세션을 사용하지 않도록 설정 (Stateless)
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-
-            // 3. API 접근 권한 설정
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login", "/api/auth/join").permitAll() // 로그인, 회원가입은 누구나 접근 가능
+                .requestMatchers("/api/auth/login", "/api/auth/join", "/app-ads.txt").permitAll() // 로그인, 회원가입, GoogleADS
                 .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
             )
-
-            // 4. JWT 필터를 UsernamePasswordAuthenticationFilter 이전에 끼워넣기
             .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), 
                                 UsernamePasswordAuthenticationFilter.class);
 
