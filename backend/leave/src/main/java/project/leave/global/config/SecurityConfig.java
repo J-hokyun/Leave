@@ -27,9 +27,10 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login", "/api/auth/join", "/app-ads.txt").permitAll() // 로그인, 회원가입, GoogleADS
-                .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
-            )
+            .requestMatchers("/", "/index.html", "/app-ads.txt", "/static/**", "/css/**", "/js/**", "/images/**").permitAll()
+            .requestMatchers("/api/auth/login", "/api/auth/join").permitAll()
+            .anyRequest().authenticated()
+        )
             .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), 
                                 UsernamePasswordAuthenticationFilter.class);
 
