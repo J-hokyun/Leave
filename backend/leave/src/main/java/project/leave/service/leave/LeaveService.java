@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -255,12 +256,8 @@ public class LeaveService {
     /* 연차 등록전, 등록하려는 연차 갯수 검증 로직 */
     private boolean validLeftLeaveCount(String userId, int weekDaysCount, String code){
         User user = userRepository.findById(userId).orElse(null);
-        List<LeaveDetail>leaveDetails = leaveDetailRepository.findAllByUserId(userId).orElse(null);
-
-        if (leaveDetails == null){
-            return true;
-        }
-
+        List<LeaveDetail>leaveDetails = leaveDetailRepository.findAllByUserId(userId).orElse(Collections.emptyList());
+        
         Double used = calUsedLeave(leaveDetails);
         Double remained = user.getTotalLeaveCount() - used;
         Double saveCount = 0.0;
