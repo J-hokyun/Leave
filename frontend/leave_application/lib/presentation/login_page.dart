@@ -29,6 +29,8 @@ class _LoginPageState extends State<LoginPage> {
 
   bool _isLoading = false;
   bool _isPasswordObscure = true;
+  bool _rememberEamil = false;
+
   @override
   void dispose() {
     // 2. 컨트롤러 해제 (메모리 누수 방지)
@@ -48,6 +50,13 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         final String token = response.data['accessToken'];
         await storage.write(key: 'ACCESS_TOKEN', value: token);
+
+        if (_rememberEamil) {
+          await storage.write(key: 'SAVED_EMAIL', value: _emailController.text);
+        } else {
+          await storage.delete(key: 'SAVED_EMAIL');
+        }
+
         logger.d("로그인 성공");
 
         if (!mounted) return;
@@ -68,6 +77,30 @@ class _LoginPageState extends State<LoginPage> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loadSavedEmail() async {
+    logger.d("_loadSavedEmail start");
+    // 스토리지에서 저장된 이메일을 읽어옴
+    final savedEmail = await storage.read(key: 'SAVED_EMAIL');
+
+    if (savedEmail != null && savedEmail.isNotEmpty) {
+      setState(() {
+        _emailController.text = savedEmail; // 이메일 필드 채우기
+        _rememberEamil = true; // 체크박스 켜기
+      });
+      logger.d("저장된 아이디 불러오기 성공: $savedEmail");
+    } else {
+      setState(() {
+        _rememberEamil = false; // 저장된 게 없으면 끄기
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedEmail();
   }
 
   @override
@@ -135,21 +168,30 @@ class _LoginPageState extends State<LoginPage> {
                 color: Colors.black45,
               ),
             ),
+            Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: _rememberEamil,
+                    onChanged: (value) {
+                      setState(() => _rememberEamil = value ?? false);
+                    },
+                    activeColor: const Color(0xFF007AFF),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  '아이디 저장',
+                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                ),
+              ],
+            ),
 
-            // Align(
-            //   alignment: Alignment.centerRight,
-            //   child: TextButton(
-            //     onPressed: () {},
-            //     child: const Text(
-            //       '비밀번호 찾기',
-            //       style: TextStyle(
-            //         color: Color(0xFF007AFF),
-            //         fontSize: 13,
-            //         fontWeight: FontWeight.bold,
-            //       ),
-            //     ),
-            //   ),
-            // ),
             const SizedBox(height: 30),
 
             // 로그인 버튼
