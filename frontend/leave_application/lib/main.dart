@@ -7,6 +7,9 @@ import 'package:leave_application/presentation/password_confirm_page.dart';
 import 'package:leave_application/presentation/profile_page.dart';
 import 'package:leave_application/presentation/login_page.dart';
 import 'package:leave_application/presentation/join_page.dart';
+import 'package:leave_application/ad/ad_manager.dart';
+import 'package:leave_application/ad/att_service.dart';
+
 import 'package:leave_application/presentation/password_change_page.dart';
 import 'package:leave_application/presentation/splash_page.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -42,15 +45,31 @@ final GoRouter _router = GoRouter(
 );
 
 void main() async {
-  // Flutter 바인딩 초기화
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await initializeDateFormatting('ko_KR', null);
+
+  AdManager().loadInterstitialAd();
+
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // 렌더링이 완료된 후 ATT 팝업을 띄웁니다.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ATTService.requestATT();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +81,6 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       routerConfig: _router,
-
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

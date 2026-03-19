@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:leave_application/core/colors/app_colors_extension.dart';
 import 'package:leave_application/core/typography/app_text_theme_extension.dart';
 import 'package:leave_application/presentation/common/footer.dart';
+import 'package:leave_application/ad/ad_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import 'package:leave_application/data/api/leave_api.dart';
@@ -80,10 +81,11 @@ class _HomePageState extends State<HomePage> {
 
       if (mounted &&
           (response.statusCode == 200 || response.statusCode == 201)) {
-        AlertUtils.showAlert(context, "저장에 성공하였습니다.");
+        await AlertUtils.showAlert(context, "저장에 성공하였습니다.");
         _reasonController.clear();
         await _fetchLeaveCounts();
         await _fetchCurrentUsedHistory();
+        AdManager().showInterstitialAd();
       }
     } catch (e) {
       String errorMessage = "오류가 발생했습니다. 다시 시도하여 주세요.";
