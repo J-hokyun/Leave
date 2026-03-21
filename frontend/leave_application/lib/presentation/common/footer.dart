@@ -45,7 +45,7 @@ class CustomFooter extends StatelessWidget {
             icon: Icons.person_outline,
             isActive:
                 currentIndex == '/valid' || currentIndex.startsWith('/profile'),
-            onTap: () => context.go('/valid'),
+            onTap: () => context.go('/profile'),
           ),
         ],
       ),
