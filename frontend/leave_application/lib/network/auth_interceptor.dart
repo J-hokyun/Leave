@@ -46,10 +46,7 @@ class AuthInterceptor extends Interceptor {
         if (location == '/login') {
           return handler.next(err);
         }
-        await AlertUtils.showAlert(
-          currentContext,
-          "로그인이 만료되었습니다. \n다시 로그인하여 주세요.",
-        );
+        await AlertUtils.showAlert(currentContext, "로그인이 만료되었습니다.");
 
         await storage.delete(key: 'ACCESS_TOKEN');
 
