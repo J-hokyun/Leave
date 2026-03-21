@@ -90,7 +90,7 @@ class _PasswordConfirmPageState extends State<PasswordConfirmPage> {
           (response.statusCode == 200 || response.statusCode == 201)) {
         // 성공 시 텍스트 초기화 후 이동
         _passwordController.clear();
-        context.go('/profile');
+        context.push('/profile/password');
       }
     } catch (e) {
       String errorMessage = "오류가 발생했습니다. 다시 시도하여 주세요.";

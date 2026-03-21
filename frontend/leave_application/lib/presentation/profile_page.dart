@@ -124,7 +124,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     text: '********',
                     actionIcon: _buildActionIcon(
                       Icons.edit_outlined,
-                      onTap: () => context.push('/profile/password'),
+                      onTap: () => context.push('/profile/valid'),
                     ),
                   ),
                   const SizedBox(height: 25),

@@ -33,7 +33,7 @@ final GoRouter _router = GoRouter(
       builder: (context, state) => const CalenderPage(),
     ),
     GoRoute(
-      path: '/valid',
+      path: '/profile/valid',
       builder: (context, state) => const PasswordConfirmPage(),
     ),
     GoRoute(path: '/profile', builder: (context, state) => const ProfilePage()),
