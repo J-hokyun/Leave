@@ -18,5 +18,10 @@ public class HolidayService {
         log.debug("[HolidayService] start getHolidaysInMonth month : {}", month);
         return holidayRepository.findAllHolidaysByMonth(month);
     }
+
+    public String getHolidayNameByDate(String date){
+        log.debug("[HolidayService] start get holiday name by date : {}", date);
+        return holidayRepository.findHolidayNameByDate(date).orElse("");
+    }
     
 }

@@ -160,4 +160,18 @@ class LeaveApi {
       rethrow;
     }
   }
+
+  Future<Response> getHolidayName({required DateTime date}) async {
+    String formattedDate = DateFormat('yyyyMMdd').format(date);
+    try {
+      final response = await _dio.get(
+        '/api/holiday/name',
+        queryParameters: {"date": formattedDate},
+      );
+      return response;
+    } on DioException catch (e) {
+      logger.d("GET /api/holiday/name exception : $e");
+      rethrow;
+    }
+  }
 }

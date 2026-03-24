@@ -11,6 +11,8 @@ import project.leave.service.leave.HolidayService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 @RestController
@@ -22,9 +24,17 @@ public class HolidayController {
 
     @GetMapping("/month")
     public ResponseEntity<?> getHolidayInMonth(@ModelAttribute HolidayInMonthRequest request) {
-        log.debug("[] GET /api/holiday/month");
+        log.debug("[HolidayController] GET /api/holiday/month");
         return ResponseEntity.ok(holidayService.getHolidaysInMonth(request.getMonth()));
     }
+
+    @GetMapping("/name")
+    public ResponseEntity<?> getHolidayName(@RequestParam("date") String date) {
+        log.debug("[HolidayController] GET /api/holiday/name");
+        String holidayName = holidayService.getHolidayNameByDate(date);
+        return ResponseEntity.ok(holidayName);
+    }
+    
     
     
 }

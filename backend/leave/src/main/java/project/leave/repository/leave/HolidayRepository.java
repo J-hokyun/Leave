@@ -1,6 +1,7 @@
 package project.leave.repository.leave;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,4 +21,9 @@ public interface HolidayRepository extends JpaRepository<Holiday, String> {
             """, nativeQuery = true)
     //해당 월에 존재하는 공휴일 조회
     List<String>findAllHolidaysByMonth(@Param("month") String month);
+
+    @Query(value = """
+            select date_name from tb_holiday where date = :date
+            """, nativeQuery = true)
+    Optional<String> findHolidayNameByDate(@Param("date")String date);
 }

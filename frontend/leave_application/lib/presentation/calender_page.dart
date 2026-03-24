@@ -29,6 +29,7 @@ class _CalenderPageState extends State<CalenderPage> {
 
   List<DateTime> _leaveDays = [];
   List<String> _holidays = [];
+  String _holidayName = "";
   bool _isInitialLoading = true;
 
   Future<void> _getMonthlyList() async {
@@ -71,6 +72,24 @@ class _CalenderPageState extends State<CalenderPage> {
       logger.d("일별 리스트 조회 실패: $e");
       setState(() {
         _dailyHistoryList = []; // 에러 시 리스트 초기화
+      });
+    }
+  }
+
+  Future<void> _getHolidayNameByDate(DateTime date) async {
+    try {
+      logger.d("터치된 날짜 : $date");
+      final response = await _leaveApi.getHolidayName(date: date);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _holidayName = response.data;
+        });
+      }
+    } catch (e) {
+      logger.d("공휴일 정보 조회 실패: $e");
+      setState(() {
+        _holidayName = ""; // 에러 시 초기화
       });
     }
   }
@@ -150,6 +169,7 @@ class _CalenderPageState extends State<CalenderPage> {
     super.initState();
     _getMonthlyList();
     _getHistoryByDate(_selectedDay);
+    _getHolidayNameByDate(_selectedDay);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // _focusedDay가 정의되어 있는 클래스 멤버 변수라고 가정합니다.
       _fetchHolidayInMonth(DateFormat('yyyyMM01').format(_focusedDay));
@@ -185,19 +205,41 @@ class _CalenderPageState extends State<CalenderPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "${_selectedDay.day}일 ${DateFormat('EEEE', 'ko_KR').format(_selectedDay)}",
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF4357FF), // 강조된 파란색
-                      ),
+                    // --- 날짜 및 공휴일 이름 표시 영역 ---
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          "${_selectedDay.day}일 ${DateFormat('EEEE', 'ko_KR').format(_selectedDay)}",
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                (_holidayName.isNotEmpty ||
+                                    _selectedDay.weekday == DateTime.saturday ||
+                                    _selectedDay.weekday == DateTime.sunday)
+                                ? Colors.red
+                                : const Color(0xFF4357FF),
+                          ),
+                        ),
+                        if (_holidayName.isNotEmpty) ...[
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _holidayName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
 
                     const SizedBox(height: 25),
-                    ..._dailyHistoryList.map((item) {
-                      return _buildHistoryItem(item);
-                    }),
                   ],
                 ),
               ),
@@ -207,7 +249,7 @@ class _CalenderPageState extends State<CalenderPage> {
       ),
       bottomNavigationBar: const CustomFooter(currentIndex: '/calendar'),
     );
-  } // --- 개별 휴가 아이템 빌더 (사진의 디자인 재현) ---
+  }
 
   // 상세 내역 빌드
   Widget _buildHistoryItem(Map<String, dynamic> item) {
@@ -292,6 +334,7 @@ class _CalenderPageState extends State<CalenderPage> {
         });
 
         _getHistoryByDate(selectedDay);
+        _getHolidayNameByDate(selectedDay);
       },
 
       /* 달력을 변경 했을 때 */
@@ -303,6 +346,7 @@ class _CalenderPageState extends State<CalenderPage> {
         });
         _getMonthlyList();
         _getHistoryByDate(firstDayOfMonth);
+        _getHolidayNameByDate(firstDayOfMonth);
         _fetchHolidayInMonth(DateFormat('yyyyMM01').format(focusedDay));
       },
 
@@ -406,184 +450,6 @@ class _CalenderPageState extends State<CalenderPage> {
       ),
     );
   }
-
-  /* 수정 버튼 터치 후 팝업창 호출 */
-  // void _showEditSheet({
-  //   required BuildContext context,
-  //   required String uuid,
-  //   required String typeCode, // 0, 1, 2
-  //   required String reason,
-  //   required DateTime selectedDate,
-  // }) {
-  //   final List<String> types = ['연차', '반차', '반반차'];
-  //   int initialIndex = int.tryParse(typeCode) ?? 0;
-  //   String currentSelectedType = types[initialIndex];
-
-  //   String formattedDate =
-  //       "${selectedDate.year}.${selectedDate.month.toString().padLeft(2, '0')}.${selectedDate.day.toString().padLeft(2, '0')}";
-
-  //   TextEditingController reasonController = TextEditingController(
-  //     text: reason,
-  //   );
-
-  //   showModalBottomSheet(
-  //     context: context,
-  //     isScrollControlled: true,
-  //     backgroundColor: Colors.transparent,
-  //     builder: (context) => StatefulBuilder(
-  //       // 내부 상태 변경을 위해 StatefulBuilder 사용
-  //       builder: (context, setModalState) => Container(
-  //         height: MediaQuery.of(context).size.height * 0.75,
-  //         decoration: const BoxDecoration(
-  //           color: Colors.white,
-  //           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-  //         ),
-  //         padding: const EdgeInsets.all(25),
-  //         child: Column(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           children: [
-  //             const Text(
-  //               "연차 수정",
-  //               style: TextStyle(
-  //                 fontSize: 22,
-  //                 fontWeight: FontWeight.bold,
-  //                 color: Color(0xFF4357FF),
-  //               ),
-  //             ),
-  //             const SizedBox(height: 25),
-
-  //             // [탭 로직 수정] 연차/반차/반반차 탭
-  //             Container(
-  //               padding: const EdgeInsets.all(4),
-  //               decoration: BoxDecoration(
-  //                 color: const Color(0xFFE8EFFF),
-  //                 borderRadius: BorderRadius.circular(15),
-  //               ),
-  //               child: Row(
-  //                 children: types.asMap().entries.map((entry) {
-  //                   int index = entry.key;
-  //                   String type = entry.value;
-  //                   bool isSelected = currentSelectedType == type;
-
-  //                   return Expanded(
-  //                     child: GestureDetector(
-  //                       onTap: () => setModalState(() {
-  //                         currentSelectedType = type;
-  //                         // 필요 시 여기서 추가 로직 수행 (예: 코드값 저장)
-  //                       }),
-  //                       child: Container(
-  //                         padding: const EdgeInsets.symmetric(vertical: 10),
-  //                         decoration: BoxDecoration(
-  //                           color: isSelected
-  //                               ? const Color(0xFF4357FF)
-  //                               : Colors.transparent,
-  //                           borderRadius: BorderRadius.circular(20),
-  //                         ),
-  //                         alignment: Alignment.center,
-  //                         child: Text(
-  //                           type,
-  //                           style: TextStyle(
-  //                             color: isSelected
-  //                                 ? Colors.white
-  //                                 : const Color(
-  //                                     0xFF4357FF,
-  //                                   ).withValues(alpha: 0.5),
-  //                             fontSize: 16, // 기존 20은 다소 클 수 있어 조정
-  //                             fontWeight: FontWeight.bold,
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   );
-  //                 }).toList(),
-  //               ),
-  //             ),
-  //             const SizedBox(height: 25),
-
-  //             // 전달받은 날짜 표시
-  //             _buildPopupField("시작일", formattedDate),
-  //             const SizedBox(height: 15),
-  //             _buildPopupField("종료일", formattedDate),
-  //             const SizedBox(height: 25),
-
-  //             const Text(
-  //               "사유",
-  //               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-  //             ),
-  //             const SizedBox(height: 10),
-  //             TextField(
-  //               controller: reasonController, // 기존 사유 바인딩
-  //               decoration: InputDecoration(
-  //                 hintText: "사유를 입력하세요",
-  //                 filled: true,
-  //                 fillColor: const Color(0xFFE8EFFF),
-  //                 border: OutlineInputBorder(
-  //                   borderRadius: BorderRadius.circular(15),
-  //                   borderSide: BorderSide.none,
-  //                 ),
-  //               ),
-  //             ),
-  //             const Spacer(),
-
-  //             // 저장 버튼 (UUID와 변경된 데이터 활용)
-  //             SizedBox(
-  //               width: double.infinity,
-  //               height: 55,
-  //               child: ElevatedButton(
-  //                 onPressed: () {
-  //                   Navigator.pop(context);
-  //                 },
-  //                 style: ElevatedButton.styleFrom(
-  //                   backgroundColor: const Color(0xFF4357FF),
-  //                   shape: RoundedRectangleBorder(
-  //                     borderRadius: BorderRadius.circular(30),
-  //                   ),
-  //                 ),
-  //                 child: const Text(
-  //                   "수정하기",
-  //                   style: TextStyle(
-  //                     fontSize: 18,
-  //                     color: Colors.white,
-  //                     fontWeight: FontWeight.bold,
-  //                   ),
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // Widget _buildPopupField(String label, String value) {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(
-  //         label,
-  //         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-  //       ),
-  //       const SizedBox(height: 10),
-  //       Container(
-  //         width: double.infinity,
-  //         padding: const EdgeInsets.all(15),
-  //         decoration: BoxDecoration(
-  //           color: const Color(0xFFE8EFFF),
-  //           borderRadius: BorderRadius.circular(15),
-  //         ),
-  //         child: Text(
-  //           value,
-  //           style: const TextStyle(
-  //             color: Color(0xFF4357FF),
-  //             fontSize: 16,
-  //             fontWeight: FontWeight.w500,
-  //           ),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
 
   void _showDeleteConfirmDialog(String uuid, String typeCode) {
     showDialog(
