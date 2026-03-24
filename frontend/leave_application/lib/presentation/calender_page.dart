@@ -238,8 +238,13 @@ class _CalenderPageState extends State<CalenderPage> {
                         ],
                       ],
                     ),
-
                     const SizedBox(height: 25),
+                    ..._dailyHistoryList.map((item) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _buildHistoryItem(item),
+                      );
+                    }),
                   ],
                 ),
               ),
