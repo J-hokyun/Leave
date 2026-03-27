@@ -237,16 +237,14 @@ class _HomePageState extends State<HomePage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // 헤더 섹션
-              // _buildHeader(),
               const SizedBox(height: 24),
-              // 나의 정보 섹션
+              // 나의 연차
               _buildMyInfoSection(),
               const SizedBox(height: 24),
-              // 캘린더 섹션
+              // 사용내역 섹션
               _buildHistorySection(),
               const SizedBox(height: 24),
-              // 최근 신청 내역
+              // 사용 기록 섹션
               _buildSaveLeaveSection(),
               const SizedBox(height: 24),
             ],
@@ -608,12 +606,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showCalendar(BuildContext context, bool isStartDate) async {
+    final now = DateTime.now();
+    final currentYear = now.year;
+
+    DateTime firstDateOfCurrentYear = DateTime(currentYear, 1, 1);
+    DateTime lastDateOfCurrentYear = DateTime(currentYear, 12, 31);
+
     DateTime tempFocusedDay = isStartDate
         ? _startDate
         : (_endDate.isBefore(_startDate) ? _startDate : _endDate);
 
-    DateTime firstDate = isStartDate ? DateTime(2020) : _startDate;
-    DateTime lastDate = DateTime(2030);
+    DateTime firstDate = isStartDate ? firstDateOfCurrentYear : _startDate;
+    DateTime lastDate = lastDateOfCurrentYear;
+
+    if (tempFocusedDay.year != currentYear) {
+      tempFocusedDay = now;
+    }
     await _fetchHolidayInMonth(DateFormat('yyyyMM01').format(tempFocusedDay));
 
     showDialog(
