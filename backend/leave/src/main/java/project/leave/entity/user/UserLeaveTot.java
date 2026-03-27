@@ -1,25 +1,33 @@
 package project.leave.entity.user;
 
-import jakarta.persistence.*;
-import lombok.*;
-import project.leave.dto.auth.JoinRequest;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
-@Table(name = "tb_users")
+@Table(name = "tb_user_leave_tot")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @ToString
-public class User {
+public class UserLeaveTot {
 
     @Id // 단일 PK로 변경
     @Column(length = 30)
@@ -28,15 +36,15 @@ public class User {
     @Column(nullable = false, unique = true, columnDefinition = "uuid")
     private UUID uuid;
 
-    @Column(nullable = false, unique = true, length = 255)
-    private String email;
+    @Column(name = "user_id", nullable = false, length = 30)
+    private String userId;
 
-    @Column(nullable = false, length = 255)
-    private String password;
+    @Column(nullable = false, length = 4)
+    private String year;
 
-    @Column(name = "is_active")
+    @Column(name = "total_leave_count")
     @ColumnDefault("0")
-    private Integer isActive; 
+    private int totalLeaveCount;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -51,10 +59,6 @@ public class User {
 
     @Column(name = "updated_by", length = 30)
     private String updatedBy;
-
-    public User (JoinRequest joinRequest)
-    {
-        this.email = joinRequest.getEmail();
-    }
-    
 }
+    
+

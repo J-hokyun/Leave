@@ -1,5 +1,8 @@
 package project.leave.service.user;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -9,12 +12,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.leave.dto.user.CountChangeRequest;
 import project.leave.dto.user.PasswordChangeRequest;
+import project.leave.dto.user.ProfileResponse;
 import project.leave.entity.user.User;
+import project.leave.entity.user.UserLeaveTot;
 import project.leave.global.error.exception.PasswordInvalidException;
 import project.leave.global.error.exception.PasswordMismatchException;
 import project.leave.global.error.exception.UserNotExistsException;
-import project.leave.repository.leave.LeaveDetailRepository;
+
 import project.leave.repository.leave.LeaveHistoryRepository;
+import project.leave.repository.user.UserLeaveTotRepository;
 import project.leave.repository.user.UserRepository;
 
 @Service
@@ -22,20 +28,22 @@ import project.leave.repository.user.UserRepository;
 @RequiredArgsConstructor
 public class ProfileService {
     private final UserRepository userRepository;
-    private final LeaveDetailRepository leaveDetailRepository;
+    private final UserLeaveTotRepository leaveTotRepository;
     private final LeaveHistoryRepository leaveHistoryRepository;
-    PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public User getUserProfile(String userId)
+    PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    String curYear = String.valueOf(LocalDateTime.now().getYear());
+
+    public ProfileResponse getUserProfile(String userId)
     {
         log.debug("[ProfileService] start getUserProfile ");
-        User user = userRepository.findByUserId(userId);
-        if (user == null)
-        {
-            log.debug("[AuthService] email is not exists");
-            throw new UserNotExistsException("존재하지 않는 사용자입니다.");
-        }
-        return user;
+        String email = userRepository.findByUserId(userId).getEmail();
+        int userLeavetot = leaveTotRepository.findLeaveCountByUserIdAndYear(userId, curYear);
+
+        ProfileResponse response = ProfileResponse.builder()
+                                    .email(email)
+                                    .count(userLeavetot).build();
+        return response;
     }
 
     /* 개인정보 변경 시, 패스워드 검증 로직 */
@@ -85,24 +93,19 @@ public class ProfileService {
     public void changeLeaveCount(CountChangeRequest countChangeRequest, String userId)
     {
         log.debug("[ProfileService] start update Leave Count");
-        User user = userRepository.findByUserId(userId);
-        if (user == null)
-        {
-            log.debug("[ProfileService] user is not exists");
-            throw new UserNotExistsException("존재하지 않는 사용자입니다.");
-        }
-
-        user.setTotalLeaveCount(countChangeRequest.getCount());
+        String year = String.valueOf(LocalDate.now().getYear());
+        UserLeaveTot leaveTot = leaveTotRepository.findByUserIdAndYear(userId, year);
+        leaveTot.setTotalLeaveCount(countChangeRequest.getCount());
     }
     
     @Transactional
     public void deleteUserInform(String userId){
         log.debug("[ProfileService] start delete user inform");
         
-        if (leaveDetailRepository.findAllByUserId(userId).orElse(null) != null)
-        {
-            leaveDetailRepository.deleteByuserId(userId);
-        }
+        // if (leaveDetailRepository.findAllByUserId(userId).orElse(null) != null)
+        // {
+        //     leaveDetailRepository.deleteByuserId(userId);
+        // }
 
         if (leaveHistoryRepository.findAllByUserId(userId).orElse(null) != null)
         {

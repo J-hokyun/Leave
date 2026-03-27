@@ -1,6 +1,7 @@
 package project.leave.repository.leave;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -159,4 +160,17 @@ public interface LeaveHistoryRepository extends JpaRepository<LeaveHistory, Stri
             SELECT date FROM tb_leave_history where parent_id = :parent_id
             """, nativeQuery = true)
     List<String>findAllDateByParentId(@Param("parent_id")String parentId);
+
+    @Query(value = """
+            select leave_type_code, count(*) as typeSum 
+            from tb_leave_history 
+            where user_id = :userId
+            and date like :year || '%' 
+            and is_holiday = 'N'
+            group by leave_type_code
+            """, nativeQuery = true)
+    List<Map<String, Object>>findAllTypeCountsByUserIdAndYear(
+        @Param("year")String year,
+        @Param("userId")String userId
+    );
 }

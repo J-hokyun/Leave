@@ -2,6 +2,8 @@ package project.leave.service.auth;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,10 +11,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import project.leave.dto.auth.JoinRequest;
 import project.leave.dto.auth.LoginRequest;
+import project.leave.entity.user.UserLeaveTot;
 import project.leave.global.error.exception.DuplicateEmailException;
 import project.leave.global.error.exception.PasswordInvalidException;
 import project.leave.global.error.exception.PasswordMismatchException;
 import project.leave.global.error.exception.UserNotExistsException;
+import project.leave.repository.user.UserLeaveTotRepository;
 import project.leave.repository.user.UserRepository;
 
 @SpringBootTest // 실제 스프링 컨테이너를 띄워 모든 Bean을 주입받음
@@ -24,6 +28,8 @@ class AuthServiceTest {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private UserLeaveTotRepository leaveTotRepository;
 
     @Test
     @DisplayName("회원가입 성공 테스트 (실제 DB 연동)")
@@ -36,12 +42,16 @@ class AuthServiceTest {
                                 .passwordConfirm("password123")
                                 .leaveAccount(15)
                                 .build();
+        String year = String.valueOf(LocalDateTime.now().getYear());
     
         // when
         authService.userJoin(request);
+        String userId = userRepository.findIdByEmail(email);
+        UserLeaveTot leaveTot = leaveTotRepository.findByUserIdAndYear(userId, year);
 
-        // 실제로 DB에 저장되었는지 Repository로 직접 조회 확인
         assertTrue(userRepository.existsByEmail(email));
+        assertEquals(userId, leaveTot.getUserId());
+        assertEquals(15, leaveTot.getTotalLeaveCount());
     }
 
     @Test

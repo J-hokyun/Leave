@@ -3,6 +3,7 @@ package project.leave.service.leave;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -20,10 +21,10 @@ import project.leave.dto.leave.LeaveHistoryRequest;
 import project.leave.dto.leave.MonthlyListRequest;
 import project.leave.dto.leave.UsedHistoryRequest;
 import project.leave.dto.leave.UsedHistoryResponse;
-import project.leave.entity.leave.LeaveDetail;
+
 import project.leave.entity.leave.LeaveHistory;
 import project.leave.global.error.exception.LeaveCountOverException;
-import project.leave.repository.leave.LeaveDetailRepository;
+
 import project.leave.repository.leave.LeaveHistoryRepository;
 
 
@@ -33,60 +34,92 @@ public class LeaveServiceTest {
 
     @Autowired
     private LeaveService leaveService;
+
     @Autowired
     private LeaveHistoryRepository leaveHistoryRepository;
-    @Autowired
-    private LeaveDetailRepository leaveDetailRepository;
 
-    private String testUserId = "user2026031100001";
+    private String testUserId = "user2026032600001";
+
+    private String curYear = String.valueOf(LocalDateTime.now().getYear());
+
+    DecimalFormat df = new DecimalFormat("###.##");
 
     @Test
     @DisplayName("연차 등록 건수 테스트 [단건]")
     void saveLeaveHisoryTest()
     {
+        String startDate = curYear + "0219";
+        String endDate = curYear + "0219";
+
         LeaveHistoryRequest historyRequest = LeaveHistoryRequest.builder()
-        .startDate("20260219")
-        .endDate("20260219")
+        .startDate(startDate)
+        .endDate(endDate)
         .leaveTypeCode("0")
         .leaveReason("휴가")
         .build();
 
         leaveService.saveLeaveHisory(historyRequest, testUserId);
-        LeaveDetail leaveDetail = leaveDetailRepository.findByUserIdAndCode(testUserId, "0").orElse(null);
-
+        Double used = leaveService.calUsedLeave(testUserId);
 
         // 저장 건수 확인.
         assertEquals(1, leaveHistoryRepository.countByUserId(testUserId));
-        assertEquals(1, leaveDetail.getUsedCount());
+        assertEquals("1", df.format(used));
     }
 
     @Test
     @DisplayName("연차 등록 건수 테스트 [다건]")
     void saveLeaveHisoriesTest()
     {
+        String startDate = curYear + "0309";
+        String endDate = curYear + "0327";
+
         LeaveHistoryRequest historyRequest = LeaveHistoryRequest.builder()
-        .startDate("20260301")
-        .endDate("20260315")
+        .startDate(startDate)
+        .endDate(endDate)
         .leaveTypeCode("0")
         .leaveReason("휴가")
         .build();
 
         leaveService.saveLeaveHisory(historyRequest, testUserId);
-        LeaveDetail leaveDetail = leaveDetailRepository.findByUserIdAndCode(testUserId, "0").orElse(null);
-
+        Double used = leaveService.calUsedLeave(testUserId);
 
         // 저장 건수 확인.
-        assertEquals(15, leaveHistoryRepository.countByUserId(testUserId));
-        assertEquals(9, leaveDetail.getUsedCount());
+        assertEquals(19, leaveHistoryRepository.countByUserId(testUserId));
+        assertEquals("15", df.format(used));
+    }
+
+    @Test
+    @DisplayName("연차 등록 건수 테스트 [다건, 주말포함]")
+    void saveLeaveHisoriesIncludeHolidayTest()
+    {
+        String startDate = curYear + "0213";
+        String endDate = curYear + "0219";
+
+        LeaveHistoryRequest historyRequest = LeaveHistoryRequest.builder()
+        .startDate(startDate)
+        .endDate(endDate)
+        .leaveTypeCode("0")
+        .leaveReason("휴가")
+        .build();
+
+        leaveService.saveLeaveHisory(historyRequest, testUserId);
+        Double used = leaveService.calUsedLeave(testUserId);
+
+        // 저장 건수 확인.
+        assertEquals(7, leaveHistoryRepository.countByUserId(testUserId));
+        assertEquals("2", df.format(used));
     }
 
     @Test
     @DisplayName("연차 등록 실패 테스트(남은 연차 갯수 초과)")
     void saveLeaveHisoriesFaliTest()
     {
+        String startDate = curYear + "0316";
+        String endDate = curYear + "0406";
+
         LeaveHistoryRequest historyRequest = LeaveHistoryRequest.builder()
-        .startDate("20260301")
-        .endDate("20260316")
+        .startDate(startDate)
+        .endDate(endDate)
         .leaveTypeCode("0")
         .leaveReason("휴가")
         .build();
@@ -100,21 +133,21 @@ public class LeaveServiceTest {
     @DisplayName("잔여, 사용 연차 출력 테스트")
     void printUsedAndRemainedDaysTest()
     {
-        LeaveHistoryRequest historyRequest1 = LeaveHistoryRequest.builder()
+        LeaveHistoryRequest historyRequest1 = LeaveHistoryRequest.builder() //2
         .startDate("20260218")
         .endDate("20260222")
         .leaveTypeCode("0")
         .leaveReason("휴가")
         .build();
 
-        LeaveHistoryRequest historyRequest2 = LeaveHistoryRequest.builder()
+        LeaveHistoryRequest historyRequest2 = LeaveHistoryRequest.builder() // 0.5
         .startDate("20260219")
         .endDate("20260219")
         .leaveTypeCode("1")
         .leaveReason("휴가")
         .build();
 
-        LeaveHistoryRequest historyRequest3 = LeaveHistoryRequest.builder()
+        LeaveHistoryRequest historyRequest3 = LeaveHistoryRequest.builder() //0.25
         .startDate("20260220")
         .endDate("20260220")
         .leaveTypeCode("2")

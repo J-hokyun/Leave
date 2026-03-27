@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -20,14 +21,12 @@ import project.leave.dto.leave.LeaveHistoryRequest;
 import project.leave.dto.leave.MonthlyListRequest;
 import project.leave.dto.leave.UsedHistoryRequest;
 import project.leave.dto.leave.UsedHistoryResponse;
-import project.leave.entity.leave.LeaveDetail;
 import project.leave.entity.leave.LeaveHistory;
-import project.leave.entity.user.User;
 import project.leave.global.error.exception.LeaveCountOverException;
 import project.leave.global.error.exception.ResourcesNotFoundException;
 import project.leave.repository.leave.HolidayRepository;
-import project.leave.repository.leave.LeaveDetailRepository;
 import project.leave.repository.leave.LeaveHistoryRepository;
+import project.leave.repository.user.UserLeaveTotRepository;
 import project.leave.repository.user.UserRepository;
 
 @Service
@@ -37,21 +36,20 @@ public class LeaveService {
 
     private final HolidayRepository holidayRepository;
     private final LeaveHistoryRepository leaveHistoryRepository;
-    private final LeaveDetailRepository leaveDetailRepository;
-    private final UserRepository userRepository;
+    private final UserLeaveTotRepository leaveTotRepository;
+
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-
+    String curYear = String.valueOf(LocalDateTime.now().getYear());
+    
     /* 연차 사용 집계 로직 */
     public LeaveCountsResponse getUserLeaveCounts(String userId)
     {
         LeaveCountsResponse leaveCounts = new LeaveCountsResponse();
 
-        User user = userRepository.findById(userId).orElse(null);
-        List<LeaveDetail>leaveDetails = leaveDetailRepository.findAllByUserId(userId).orElse(null);
-
-        Double used = calUsedLeave(leaveDetails);
-        Double remained = user.getTotalLeaveCount() - used;
+        Double used = calUsedLeave(userId);
+        int totalCount = leaveTotRepository.findLeaveCountByUserIdAndYear(userId, curYear);
+        Double remained = totalCount - used;
 
         DecimalFormat df = new DecimalFormat("###.##");
 
@@ -74,21 +72,31 @@ public class LeaveService {
 
         /* 주말 및 공휴일을 제외한 평일만 카운팅한 변수 */
         int weekDaysCount = calWeekDay(leaveRecordRequest.getStartDate(), leaveRecordRequest.getEndDate());
-
         if (!validLeftLeaveCount(userId, weekDaysCount, leaveRecordRequest.getLeaveTypeCode())){
             throw new LeaveCountOverException("잔여 연차가 부족합니다.");
         }
 
+
         for (int i = 0; i<=daysBetween; ++i)
         {
+            String isHoliday = "N";
+            String date = addDays(start, i);
+            LocalDate localDate = LocalDate.parse(date, formatter);
+            boolean isWeekend = (localDate.getDayOfWeek() == DayOfWeek.SATURDAY || 
+                                localDate.getDayOfWeek() == DayOfWeek.SUNDAY);
+            if (holidayRepository.existsByDate(date) ||  isWeekend){
+                isHoliday = "Y";
+            }
+
             LeaveHistory leaveHistory = LeaveHistory.builder()
             .id(genereteHistoryId())
             .userId(userId)
             .uuid(generateUuid())
-            .date(addDays(start, i))
+            .date(date)
             .leaveReason(leaveRecordRequest.getLeaveReason())
             .leaveTypeCode(leaveRecordRequest.getLeaveTypeCode())
             .parentId(parentId)
+            .isHoliday(isHoliday)
             .createdAt(LocalDateTime.now())
             .createdBy(userId)
             .updatedAt(LocalDateTime.now())
@@ -96,27 +104,6 @@ public class LeaveService {
             .build();
             leaveHistoryRepository.save(leaveHistory);
         }
-
-        /* 연차 종류별 카운팅을 집계 테이블 반영 */
-        LeaveDetail leaveDetail = getLeaveDetail(userId, leaveRecordRequest.getLeaveTypeCode());
-        if (leaveDetail == null)
-        {
-            leaveDetail = LeaveDetail.builder()
-            .id(generateDetailId())
-            .userId(userId)
-            .leaveTypeCode(leaveRecordRequest.getLeaveTypeCode())
-            .usedCount(weekDaysCount)
-            .createdBy(userId)
-            .createdAt(LocalDateTime.now())
-            .updatedBy(userId)
-            .updatedAt(LocalDateTime.now())
-            .build();
-
-            leaveDetailRepository.save(leaveDetail);
-        }else{
-            leaveDetail.addUsedCount(weekDaysCount, userId);
-        }
-
         return parentId;
     }
 
@@ -173,28 +160,7 @@ public class LeaveService {
     {
         log.debug("[LeaveService] deleteHistory uuid : {}, userId : {}, code : {}", request.getUuid(), request.getUserId(), request.getCode());
         String parentId = getparetnId(request.getUuid());
-
-        List<String>dateList = leaveHistoryRepository.findAllDateByParentId(parentId);
-        int deleteCount = 0;
-
-        for (String date : dateList){
-            LocalDate parseDate = LocalDate.parse(date, formatter);
-            
-            if (parseDate.getDayOfWeek()==DayOfWeek.SATURDAY || parseDate.getDayOfWeek() == DayOfWeek.SUNDAY){
-                continue;
-            }else if (holidayRepository.existsByDate(date)){
-                continue;
-            }else{
-                deleteCount++;
-            }
-        }
         leaveHistoryRepository.deleteByParentId(parentId);  
-        LeaveDetail leaveDetail = leaveDetailRepository.findByUserIdAndCode(request.getUserId(), request.getCode()).orElse(null);
-        if (leaveDetail == null){
-            throw new ResourcesNotFoundException("삭제 중 오류가 생겼습니다. 다시 시도 하여 주세요");
-        }
-        int newCount = Math.max(0, leaveDetail.getUsedCount() - deleteCount );
-        leaveDetail.setUsedCount(newCount);
     }
 
     /* 연차 내역 ID(PK) 생성 로직 */
@@ -219,49 +185,38 @@ public class LeaveService {
         return newDate.format(formatter);
     }
 
-    /* 연차타입별 갯수를 집계하는 테이블에서 정보를 조회하는 로직 */
-    private LeaveDetail getLeaveDetail (String userId, String code)
-    {
-        log.debug("[LeaveService] getLeaveDetail ");
-        return leaveDetailRepository.findByUserIdAndCode(userId, code).orElse(null);
+    public Double calUsedLeave(String userId){
+    log.debug("[LeaveService] try cal user leave sum for userId: {}", userId);
+    Double leaveSum = 0.00;
+    String curYear = String.valueOf(LocalDate.now().getYear());
+
+    List<Map<String, Object>> leaveTypeCounts = leaveHistoryRepository.findAllTypeCountsByUserIdAndYear(curYear, userId);
+    Map<String, Double> weights = Map.of(
+        "0", 1.0,
+        "1", 0.5,
+        "2", 0.25
+    );
+    for (Map<String, Object> row : leaveTypeCounts) {
+        String typeCode = String.valueOf(row.get("leave_type_code"));
+        int count = ((Number) row.get("typeSum")).intValue();
+        Double weight = weights.getOrDefault(typeCode, 0.0);
+        leaveSum += (weight * count);
     }
 
-    /* 갯수 집계 테이블의 ID(PK) 를 생성하는 로직 */
-    private String generateDetailId ()
-    {
-        log.debug("[LeaveService] generate DetailId start");
-        return leaveDetailRepository.getNewId();
-    }
-
-    /* 연차 집계 테이블에서 조회된 정보를 바탕으로 전체 사용 갯수를 집계하는 로직 */
-    private Double calUsedLeave(List<LeaveDetail> leaveDetails)
-    {
-        log.debug("[LeaveService] try cal user leave sum");
-        Double leaveSum = 0.00;
-        for (LeaveDetail leaveDetail : leaveDetails)
-        {
-            if (leaveDetail.getLeaveTypeCode().equals("0"))
-            {
-                leaveSum += (1 * leaveDetail.getUsedCount());
-            }else if(leaveDetail.getLeaveTypeCode().equals("1")){
-                leaveSum += (0.5 * leaveDetail.getUsedCount());
-            }else{
-                leaveSum += (0.25 * leaveDetail.getUsedCount());
-            }
-        }
-        log.debug("[LeaveService] user leave sum is : {}", leaveSum);
-        return leaveSum;
-    }
+    log.debug("[LeaveService] user {}'s total leave sum is : {}", userId, leaveSum);
+    return leaveSum;
+}
 
     /* 연차 등록전, 등록하려는 연차 갯수 검증 로직 */
     private boolean validLeftLeaveCount(String userId, int weekDaysCount, String code){
-        User user = userRepository.findById(userId).orElse(null);
-        List<LeaveDetail>leaveDetails = leaveDetailRepository.findAllByUserId(userId).orElse(Collections.emptyList());
         
-        Double used = calUsedLeave(leaveDetails);
-        Double remained = user.getTotalLeaveCount() - used;
+        /* 남은연차 계산 -> remaines에 저장 */
+        Double used = calUsedLeave(userId);
+        int totalCount = leaveTotRepository.findLeaveCountByUserIdAndYear(userId, curYear);
+        Double remained = totalCount - used;
+        
+        /* 등록하고자 하는 연차계산. */
         Double saveCount = 0.0;
-
         if (code.equals("0")){
             saveCount = 1.0 * weekDaysCount;
         }else if (code.equals("1")){
@@ -269,6 +224,7 @@ public class LeaveService {
         }else{
             saveCount = 0.25 * weekDaysCount;
         }
+
         // 남은 연차 갯수 VS 등록하려는 연차갯수 비교
         log.debug("[validLeftLeaveCount] remained : {}, saveCount : {} ", remained, saveCount);
         if (remained >= saveCount){

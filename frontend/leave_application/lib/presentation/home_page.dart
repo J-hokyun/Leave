@@ -608,15 +608,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showCalendar(BuildContext context, bool isStartDate) async {
-    // 1. 달력 제어를 위한 로컬 변수 설정
     DateTime tempFocusedDay = isStartDate
         ? _startDate
         : (_endDate.isBefore(_startDate) ? _startDate : _endDate);
 
     DateTime firstDate = isStartDate ? DateTime(2020) : _startDate;
     DateTime lastDate = DateTime(2030);
-
-    // 2. 다이얼로그 오픈 전, 초기 화면을 위한 데이터 요청
     await _fetchHolidayInMonth(DateFormat('yyyyMM01').format(tempFocusedDay));
 
     showDialog(
@@ -669,15 +666,10 @@ class _HomePageState extends State<HomePage> {
 
                         // 달력 이동 시 호출
                         onPageChanged: (focusedDay) async {
-                          // (1) 달력 먼저 넘기기
                           setDialogState(() => tempFocusedDay = focusedDay);
-
-                          // (2) 서버에서 데이터 가져올 때까지 기다리기 (함수 수정 없이 await)
                           await _fetchHolidayInMonth(
                             DateFormat('yyyyMM01').format(focusedDay),
                           );
-
-                          // (3) [가장 중요] 데이터 로드 완료 후 다이얼로그만 다시 그리기
                           if (context.mounted) {
                             setDialogState(() {});
                           }

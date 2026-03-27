@@ -1,7 +1,10 @@
 package project.leave.service.user;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,7 +15,9 @@ import jakarta.transaction.Transactional;
 import project.leave.dto.auth.LoginRequest;
 import project.leave.dto.user.CountChangeRequest;
 import project.leave.dto.user.PasswordChangeRequest;
+import project.leave.entity.user.UserLeaveTot;
 import project.leave.global.error.exception.PasswordInvalidException;
+import project.leave.repository.user.UserLeaveTotRepository;
 import project.leave.service.auth.AuthService;
 
 @SpringBootTest 
@@ -24,9 +29,13 @@ public class ProfileServiceTest {
     @Autowired
     private AuthService authService;
 
-    private String testUserId = "user2026031100001";
+    @Autowired
+    private UserLeaveTotRepository leaveTotRepository;
+
+    private String testUserId = "user2026032600001";
     private String testPassword = "password3#";
     private String testUserEmail = "test@naver.com";
+    private String curYear = String.valueOf( LocalDateTime.now().getYear());
 
     @Test
     @DisplayName("비밀번호 인증 테스트")
@@ -77,7 +86,12 @@ public class ProfileServiceTest {
     {
         int newLeaveCount = 16;
         CountChangeRequest countChangeRequest = CountChangeRequest.builder().count(newLeaveCount).build();
+        
         profileService.changeLeaveCount(countChangeRequest, testUserId);
+
+        UserLeaveTot userLeaveTot = leaveTotRepository.findByUserIdAndYear(testUserId, curYear);
+
+        assertEquals(16, userLeaveTot.getTotalLeaveCount());
 
     }
 

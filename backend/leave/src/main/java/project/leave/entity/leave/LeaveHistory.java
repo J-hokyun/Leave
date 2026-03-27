@@ -44,8 +44,11 @@ public class LeaveHistory {
     private String leaveTypeCode;
 
     @Column(name = "parent_id", nullable = false, length = 30)
-    private String parentId;    
-
+    private String parentId;
+    
+    @Column(name = "is_holiday", nullable = false, length = 1)
+    private String isHoliday;
+    
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

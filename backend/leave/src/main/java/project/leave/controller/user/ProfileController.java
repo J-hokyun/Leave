@@ -9,7 +9,6 @@ import project.leave.dto.user.ProfileResponse;
 import project.leave.dto.user.CountChangeRequest;
 import project.leave.dto.user.PasswordChangeRequest;
 import project.leave.dto.user.PasswordValidRequest;
-import project.leave.entity.user.User;
 import project.leave.service.user.ProfileService;
 
 import org.springframework.http.ResponseEntity;
@@ -38,10 +37,8 @@ public class ProfileController {
     @GetMapping("/profile")
     public ResponseEntity<ProfileResponse> getUserProfileController(@AuthenticationPrincipal String userId) {
         log.debug("[ProfileController] GET /api/user/profile ");
-
-        User user = profileService.getUserProfile(userId);
-        ProfileResponse profileResponse = ProfileResponse.builder().email(user.getEmail()).count(user.getTotalLeaveCount()).build();
-        return ResponseEntity.ok(profileResponse);
+        ProfileResponse response = profileService.getUserProfile(userId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/profile/password")

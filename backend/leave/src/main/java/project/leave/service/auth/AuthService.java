@@ -13,10 +13,12 @@ import lombok.extern.slf4j.Slf4j;
 import project.leave.dto.auth.JoinRequest;
 import project.leave.dto.auth.LoginRequest;
 import project.leave.entity.user.User;
+import project.leave.entity.user.UserLeaveTot;
 import project.leave.global.error.exception.DuplicateEmailException;
 import project.leave.global.error.exception.PasswordInvalidException;
 import project.leave.global.error.exception.PasswordMismatchException;
 import project.leave.global.error.exception.UserNotExistsException;
+import project.leave.repository.user.UserLeaveTotRepository;
 import project.leave.repository.user.UserRepository;
 
 @Service
@@ -25,6 +27,8 @@ import project.leave.repository.user.UserRepository;
 public class AuthService {
     
     private final UserRepository userRepository;
+    private final UserLeaveTotRepository leaveTotRepository;
+
     PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     /* 로그인 서비스 */
@@ -71,7 +75,6 @@ public class AuthService {
                         .id(newUserId)
                         .uuid(generateUuid())
                         .email(joinRequest.getEmail())
-                        .totalLeaveCount(joinRequest.getLeaveAccount())
                         .password(passwordEncoder.encode(joinRequest.getPassword()))
                         .isActive(1)
                         .createdBy(newUserId)
@@ -81,6 +84,19 @@ public class AuthService {
                         .build();
         
         userRepository.save(newUser);
+
+        UserLeaveTot newTot = UserLeaveTot.builder()
+                        .id(leaveTotRepository.findNewTotId())
+                        .uuid(generateUuid())
+                        .userId(newUserId)
+                        .year(String.valueOf(LocalDateTime.now().getYear()))
+                        .totalLeaveCount(joinRequest.getLeaveAccount())
+                        .createdBy(newUserId)
+                        .createdAt(LocalDateTime.now())
+                        .updatedBy(newUserId)
+                        .updatedAt(LocalDateTime.now())
+                        .build();
+        leaveTotRepository.save(newTot);
     }
 
     /* userId DB로부터 조회 */
