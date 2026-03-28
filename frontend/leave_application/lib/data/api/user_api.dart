@@ -28,7 +28,7 @@ class UserApi {
   Future<Response> getUserProfile() async {
     try {
       final response = await _dio.get('/api/user/profile');
-      return response; // 여기 안에 email, count(연차갯수) 값잇음
+      return response;
     } on DioException catch (e) {
       logger.d("GET /api/user/profile exception : $e");
       rethrow;
@@ -62,6 +62,22 @@ class UserApi {
       return response;
     } on DioException catch (e) {
       logger.d("POST /api/user/profile/count exception : $e");
+      rethrow;
+    }
+  }
+
+  // 연차 공휴일 여부 포함 변경 API
+  Future<Response> changeIsIncludeHoliday({
+    required String isIncludeHoliday,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/api/user/profile/holiday',
+        data: {"isIncludeHoliday": isIncludeHoliday},
+      );
+      return response;
+    } on DioException catch (e) {
+      logger.d("POST /api/user/profile/holiday exception : $e");
       rethrow;
     }
   }

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.leave.dto.user.ProfileResponse;
 import project.leave.dto.user.CountChangeRequest;
+import project.leave.dto.user.IsIncludeHolidayChangeRequest;
 import project.leave.dto.user.PasswordChangeRequest;
 import project.leave.dto.user.PasswordValidRequest;
 import project.leave.service.user.ProfileService;
@@ -50,15 +51,30 @@ public class ProfileController {
 
 
     @PostMapping("/profile/count")
-    public ResponseEntity<?> leaveCountController(@RequestBody CountChangeRequest countChangeRequest, @AuthenticationPrincipal String userId) {
-        log.debug("[ProfileController] POST /api/profile/count");
+    public ResponseEntity<?> leaveCountChangeController(
+        @RequestBody CountChangeRequest countChangeRequest, 
+        @AuthenticationPrincipal String userId) {
+        log.debug("[ProfileController] POST /api/user/profile/count");
         profileService.changeLeaveCount(countChangeRequest, userId);
         return ResponseEntity.ok("");
     }
 
+    @PostMapping("/profile/holiday")
+    public ResponseEntity<?> isIncludeHolidayChangeController(
+        @RequestBody IsIncludeHolidayChangeRequest request,
+        @AuthenticationPrincipal String userId) {
+        log.debug("[ProfileController] POST /api/user/profile/holiday");
+        log.debug("[ProfileController] userId : {}", userId);
+        log.debug("[] new isIncludeHoliday : {}", request.getIsIncludeHoliday());
+        profileService.changeIsIncludeHoliday(request, userId);
+        
+        return ResponseEntity.ok("");
+    }
+    
+
     @PostMapping("/profile/delete")
     public ResponseEntity<?> deleteUserInformController(@AuthenticationPrincipal String userId) {
-        log.debug("[ProfileController] POST /api/profile/delete");
+        log.debug("[ProfileController] POST /api/user/profile/delete");
         profileService.deleteUserInform(userId);
         
         return ResponseEntity.ok("");

@@ -250,7 +250,7 @@ class _JoinPageState extends State<JoinPage> {
             ),
             _buildStatusMessage(confirmStatus['text'], confirmStatus['color']),
             const SizedBox(height: 15),
-            _buildInputLabel('주말 및 공휴일 연차포함여부'),
+            _buildInputLabel('연차 공휴일 포함'),
             _buildDropdownField(
               hintText: '예 또는 아니오',
               value: _includeHoliday,

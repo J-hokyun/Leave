@@ -36,6 +36,7 @@ class _ProfilePageState extends State<ProfilePage> {
   // 데이터 상태
   String _email = "";
   int _leaveCount = 0;
+  String _isIncludeHoliday = "";
   bool _isLoading = true;
 
   @override
@@ -52,6 +53,7 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           _email = response.data['email'];
           _leaveCount = response.data['count'];
+          _isIncludeHoliday = response.data['isIncludeHoliday'];
           _isLoading = false;
         });
       }
@@ -119,12 +121,21 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 25),
 
                   // 비밀번호 변경
-                  _buildLabel('비밀번호 변경'),
+                  _buildLabel('비밀번호'),
                   _buildInfoBox(
                     text: '********',
                     actionIcon: _buildActionIcon(
                       Icons.edit_outlined,
                       onTap: () => context.push('/profile/valid'),
+                    ),
+                  ),
+                  const SizedBox(height: 25),
+                  _buildLabel('연차 공휴일 포함'),
+                  _buildInfoBox(
+                    text: _isIncludeHoliday == 'Y' ? '예' : '아니오',
+                    actionIcon: _buildActionIcon(
+                      Icons.edit_outlined,
+                      onTap: _showHolidayEditDialog, // 위에서 만든 함수 호출
                     ),
                   ),
                   const SizedBox(height: 25),
@@ -387,6 +398,103 @@ class _ProfilePageState extends State<ProfilePage> {
               child: const Text('저장', style: TextStyle(color: Colors.white)),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void _showHolidayEditDialog() {
+    String tempStatus = _isIncludeHoliday;
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text('연차 공휴일 포함', style: titleStyle),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    '주말 및 공휴일을 연차 개수에\n포함할지 선택해주세요.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: inputFillColor,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: tempStatus,
+                        isExpanded: true,
+                        dropdownColor: Colors.white,
+                        items: const [
+                          DropdownMenuItem(value: "Y", child: Text("예")),
+                          DropdownMenuItem(value: "N", child: Text("아니오")),
+                        ],
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setDialogState(() => tempStatus = newValue);
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('취소', style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      final response = await _userApi.changeIsIncludeHoliday(
+                        isIncludeHoliday: tempStatus,
+                      );
+
+                      if (!dialogContext.mounted) return;
+
+                      if (response.statusCode == 200 ||
+                          response.statusCode == 201) {
+                        if (Navigator.canPop(dialogContext)) {
+                          Navigator.pop(dialogContext);
+                        }
+
+                        setState(() {
+                          _isIncludeHoliday = tempStatus;
+                        });
+
+                        if (!mounted) return;
+                        AlertUtils.showAlert(context, '연차 공휴일 여부가 수정되었습니다.');
+                      }
+                    } catch (e) {
+                      AlertUtils.showError(context, '수정에 실패했습니다.');
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    '저장',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

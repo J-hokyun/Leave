@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import project.leave.dto.user.CountChangeRequest;
+import project.leave.dto.user.IsIncludeHolidayChangeRequest;
 import project.leave.dto.user.PasswordChangeRequest;
 import project.leave.dto.user.ProfileResponse;
 import project.leave.entity.user.User;
@@ -39,10 +40,14 @@ public class ProfileService {
         log.debug("[ProfileService] start getUserProfile ");
         String email = userRepository.findByUserId(userId).getEmail();
         int userLeavetot = leaveTotRepository.findLeaveCountByUserIdAndYear(userId, curYear);
+        String isIncludeHoliday = userRepository.findIsIncludeHolidayByUserId(userId);
 
         ProfileResponse response = ProfileResponse.builder()
                                     .email(email)
-                                    .count(userLeavetot).build();
+                                    .count(userLeavetot)
+                                    .isIncludeHoliday(isIncludeHoliday)
+                                    .build();
+                                    
         return response;
     }
 
@@ -73,14 +78,14 @@ public class ProfileService {
 
         if (!passwordChangeRequest.getPassword().equals(passwordChangeRequest.getPasswordConfirm()))
         {
-            log.debug("[AuthService] passwordEncode password is not same");
+            log.debug("[ProfileService] passwordEncode password is not same");
             throw new PasswordMismatchException("비밀번호가 일치하지 않습니다");
         }
 
         User user = userRepository.findByUserId(userId);
         if (user == null)
         {
-            log.debug("[AuthService] user is not exists");
+            log.debug("[ProfileService] user is not exists");
             throw new UserNotExistsException("존재하지 않는 사용자입니다.");
         }
         
@@ -101,7 +106,20 @@ public class ProfileService {
         leaveTot.setUpdatedAt(LocalDateTime.now());
         leaveTot.setUpdatedBy(userId);
     }
+
+    @Transactional
+    public void changeIsIncludeHoliday(IsIncludeHolidayChangeRequest request, String userId){
+        log.debug("[ProfileService] start change isIncludeHoliday userId : {}", userId);
+        User user = userRepository.findByUserId(userId);
+        if (user == null)
+        {
+            log.debug("[ProfileService] user is not exists");
+            throw new UserNotExistsException("존재하지 않는 사용자입니다.");
+        }
+        user.setIsIncludeHoliday(request.getIsIncludeHoliday());
+    }
     
+    /* 회원 탈퇴 로직 */
     @Transactional
     public void deleteUserInform(String userId){
         log.debug("[ProfileService] start delete user inform");
