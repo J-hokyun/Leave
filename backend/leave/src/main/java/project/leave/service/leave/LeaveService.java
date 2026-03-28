@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,6 +33,7 @@ import project.leave.repository.user.UserRepository;
 @RequiredArgsConstructor
 public class LeaveService {
 
+    private final UserRepository userRepository;
     private final HolidayRepository holidayRepository;
     private final LeaveHistoryRepository leaveHistoryRepository;
     private final UserLeaveTotRepository leaveTotRepository;
@@ -41,7 +41,7 @@ public class LeaveService {
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
     String curYear = String.valueOf(LocalDateTime.now().getYear());
-    
+
     /* 연차 사용 집계 로직 */
     public LeaveCountsResponse getUserLeaveCounts(String userId)
     {
@@ -185,12 +185,19 @@ public class LeaveService {
         return newDate.format(formatter);
     }
 
+    /* 사용한 연차 집계 로직 */
     public Double calUsedLeave(String userId){
     log.debug("[LeaveService] try cal user leave sum for userId: {}", userId);
     Double leaveSum = 0.00;
     String curYear = String.valueOf(LocalDate.now().getYear());
 
-    List<Map<String, Object>> leaveTypeCounts = leaveHistoryRepository.findAllTypeCountsByUserIdAndYear(curYear, userId);
+    List<Map<String, Object>> leaveTypeCounts;
+    /* 연차 공휴일 포함여부 에따른 쿼리 분기 */
+    if (userRepository.findIsIncludeHolidayByUserId(userId).equals("N")){
+        leaveTypeCounts = leaveHistoryRepository.findAllTypeCountsByUserIdAndYearAndNotIncludeHoliday(curYear, userId);
+    }else{
+        leaveTypeCounts = leaveHistoryRepository.findAllTypeCountsByUserIdAndYearAndIncludeHoliday(curYear, userId);
+    }
     Map<String, Double> weights = Map.of(
         "0", 1.0,
         "1", 0.5,

@@ -39,4 +39,9 @@ public interface UserLeaveTotRepository extends JpaRepository<UserLeaveTot, Stri
             """, nativeQuery = true)
     int findLeaveCountByUserIdAndYear(@Param("userId") String userId, @Param("year") String year);
 
+    @Query(value = """
+            DELETE FROM tb_user_leave_tot WHERE user_id = :userId
+            """, nativeQuery = true)
+    void deleteAllByUserId(@Param("userId")String userId);
+
 }

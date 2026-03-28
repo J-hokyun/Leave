@@ -46,7 +46,7 @@ public class ProfileService {
         return response;
     }
 
-    /* 개인정보 변경 시, 패스워드 검증 로직 */
+    /* 비밀번호 변경 시, 패스워드 검증 로직 */
     public void validPassword(String password, String userId)
     {
         log.debug("[ProfileService] start valid user password");
@@ -86,6 +86,8 @@ public class ProfileService {
         
         String encodeNewPassword = passwordEncoder.encode(passwordChangeRequest.getPassword());
         user.setPassword(encodeNewPassword);
+        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedBy(userId);
     }
 
     /* 연차 갯수 변경 로직 */
@@ -96,22 +98,18 @@ public class ProfileService {
         String year = String.valueOf(LocalDate.now().getYear());
         UserLeaveTot leaveTot = leaveTotRepository.findByUserIdAndYear(userId, year);
         leaveTot.setTotalLeaveCount(countChangeRequest.getCount());
+        leaveTot.setUpdatedAt(LocalDateTime.now());
+        leaveTot.setUpdatedBy(userId);
     }
     
     @Transactional
     public void deleteUserInform(String userId){
         log.debug("[ProfileService] start delete user inform");
-        
-        // if (leaveDetailRepository.findAllByUserId(userId).orElse(null) != null)
-        // {
-        //     leaveDetailRepository.deleteByuserId(userId);
-        // }
-
         if (leaveHistoryRepository.findAllByUserId(userId).orElse(null) != null)
         {
             leaveHistoryRepository.deleteByuserId(userId);
         }
-        
+        leaveTotRepository.deleteAllByUserId(userId);
         userRepository.deleteByuserId(userId);
     }
 

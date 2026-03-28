@@ -60,6 +60,13 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Modifying
     void deleteByuserId(@Param("userId") String userId);
 
+    @Query(value = """
+            SELECT is_include_holiday
+            FROM tb_users
+            WHERE id = :userId
+            """, nativeQuery = true)
+    String findIsIncludeHolidayByUserId(@Param("userId") String userId);
+
     
     
 }

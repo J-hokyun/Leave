@@ -46,6 +46,7 @@ class AuthApi {
     required String password, // yyyyMMdd
     required String passwordConfirm, // yyyyMMdd
     required int leaveAccount, // yyyyMMdd
+    required bool? includeHoliday,
   }) async {
     try {
       final response = await _dio.post(
@@ -55,6 +56,7 @@ class AuthApi {
           "password": password,
           'passwordConfirm': passwordConfirm,
           'leaveAccount': leaveAccount,
+          'includeHoliday': includeHoliday,
         },
       );
       return response;

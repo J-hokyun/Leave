@@ -38,7 +38,7 @@ public class LeaveServiceTest {
     @Autowired
     private LeaveHistoryRepository leaveHistoryRepository;
 
-    private String testUserId = "user2026032600001";
+    private String testUserId = "user2026032800003";
 
     private String curYear = String.valueOf(LocalDateTime.now().getYear());
 

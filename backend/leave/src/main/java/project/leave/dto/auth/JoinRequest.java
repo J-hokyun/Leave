@@ -16,4 +16,5 @@ public class JoinRequest {
     private String passwordConfirm;
     private String password;
     private int leaveAccount;
+    private boolean includeHoliday;
 }

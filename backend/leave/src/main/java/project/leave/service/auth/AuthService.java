@@ -71,11 +71,14 @@ public class AuthService {
         }
 
         String newUserId = generateUserId();
+        String isIgnoreHoliday = joinRequest.isIncludeHoliday() ? "Y" : "N";
+
         User newUser = User.builder()
                         .id(newUserId)
                         .uuid(generateUuid())
                         .email(joinRequest.getEmail())
                         .password(passwordEncoder.encode(joinRequest.getPassword()))
+                        .isIncludeHoliday(isIgnoreHoliday)
                         .isActive(1)
                         .createdBy(newUserId)
                         .createdAt(LocalDateTime.now())

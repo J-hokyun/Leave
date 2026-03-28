@@ -48,7 +48,10 @@ public class AuthController {
     @PostMapping("/join")
     public ResponseEntity<?> postJoinController(@RequestBody JoinRequest joinRequest) {
         log.debug("[AuthController] /join controller start");
-
+        log.debug("joinRequest email : {}", joinRequest.getEmail());
+        log.debug("joinRequest password : {}", joinRequest.getPassword());
+        log.debug("joinRequest leaveCount : {}", joinRequest.getLeaveAccount());
+        log.debug("joinRequest isIncludeHoliday : {}", joinRequest.isIncludeHoliday());
         authService.userJoin(joinRequest);
 
         return ResponseEntity.ok("회원가입에 성공하였습니다.");

@@ -36,7 +36,10 @@ public class User {
 
     @Column(name = "is_active")
     @ColumnDefault("0")
-    private Integer isActive; 
+    private Integer isActive;
+    
+    @Column(name = "is_include_holiday", length = 1)
+    private String isIncludeHoliday;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

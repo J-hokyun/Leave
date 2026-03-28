@@ -169,7 +169,19 @@ public interface LeaveHistoryRepository extends JpaRepository<LeaveHistory, Stri
             and is_holiday = 'N'
             group by leave_type_code
             """, nativeQuery = true)
-    List<Map<String, Object>>findAllTypeCountsByUserIdAndYear(
+    List<Map<String, Object>>findAllTypeCountsByUserIdAndYearAndNotIncludeHoliday(
+        @Param("year")String year,
+        @Param("userId")String userId
+    );
+
+    @Query(value = """
+            select leave_type_code, count(*) as typeSum 
+            from tb_leave_history 
+            where user_id = :userId
+            and date like :year || '%' 
+            group by leave_type_code
+            """, nativeQuery = true)
+    List<Map<String, Object>>findAllTypeCountsByUserIdAndYearAndIncludeHoliday(
         @Param("year")String year,
         @Param("userId")String userId
     );

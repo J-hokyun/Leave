@@ -29,7 +29,7 @@ class _JoinPageState extends State<JoinPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
   final TextEditingController _leaveController = TextEditingController();
-
+  bool? _includeHoliday;
   bool _isPasswordObscure = true;
   bool _isConfirmObscure = true;
   bool _isLoading = false;
@@ -130,6 +130,7 @@ class _JoinPageState extends State<JoinPage> {
         password: _passwordController.text,
         passwordConfirm: _confirmController.text,
         leaveAccount: int.tryParse(_leaveController.text) ?? 0,
+        includeHoliday: _includeHoliday,
       );
 
       if (response.statusCode == 200) {
@@ -170,7 +171,8 @@ class _JoinPageState extends State<JoinPage> {
         emailStatus['isValid'] == true &&
         pwdStatus['isValid'] == true &&
         confirmStatus['color'] == primaryColor &&
-        countStatus['isValid'] == true;
+        countStatus['isValid'] == true &&
+        _includeHoliday != null;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -207,7 +209,7 @@ class _JoinPageState extends State<JoinPage> {
               onChanged: (_) => setState(() {}),
             ),
             _buildStatusMessage(emailStatus['text'], emailStatus['color']),
-            const SizedBox(height: 25),
+            const SizedBox(height: 15),
 
             // 비밀번호 섹션
             _buildInputLabel('비밀번호'),
@@ -247,8 +249,18 @@ class _JoinPageState extends State<JoinPage> {
               ),
             ),
             _buildStatusMessage(confirmStatus['text'], confirmStatus['color']),
+            const SizedBox(height: 15),
+            _buildInputLabel('주말 및 공휴일 연차포함여부'),
+            _buildDropdownField(
+              hintText: '예 또는 아니오',
+              value: _includeHoliday,
+              onChanged: (bool? newValue) {
+                setState(() {
+                  _includeHoliday = newValue;
+                });
+              },
+            ),
             const SizedBox(height: 25),
-
             // 연차갯수 섹션
             _buildInputLabel('연차갯수'),
             _buildTextField(
@@ -262,7 +274,7 @@ class _JoinPageState extends State<JoinPage> {
               onChanged: (_) => setState(() {}),
             ),
             _buildStatusMessage(countStatus['text'], countStatus['color']),
-            const SizedBox(height: 50),
+            const SizedBox(height: 15),
 
             // 회원가입 버튼
             SizedBox(
@@ -348,6 +360,39 @@ class _JoinPageState extends State<JoinPage> {
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String hintText,
+    bool? value,
+    required ValueChanged<bool?> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: inputFillColor,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButtonFormField<bool>(
+          initialValue: value,
+          hint: Text(
+            hintText,
+            style: TextStyle(
+              color: primaryColor.withOpacity(0.3),
+              fontSize: 16,
+            ),
+          ),
+          decoration: const InputDecoration(border: InputBorder.none),
+          icon: Icon(Icons.keyboard_arrow_down, color: primaryColor),
+          items: const [
+            DropdownMenuItem(value: true, child: Text("예")),
+            DropdownMenuItem(value: false, child: Text("아니오")),
+          ],
+          onChanged: onChanged,
         ),
       ),
     );

@@ -32,7 +32,7 @@ public class ProfileServiceTest {
     @Autowired
     private UserLeaveTotRepository leaveTotRepository;
 
-    private String testUserId = "user2026032600001";
+    private String testUserId = "user2026032800003";
     private String testPassword = "password3#";
     private String testUserEmail = "test@naver.com";
     private String curYear = String.valueOf( LocalDateTime.now().getYear());
