@@ -174,4 +174,32 @@ class LeaveApi {
       rethrow;
     }
   }
+
+  Future<Response> getYearlyLeaveHistory({required DateTime date}) async {
+    String formattedDate = DateFormat('yyyyMMdd').format(date);
+    try {
+      final response = await _dio.get(
+        '/api/leave/yearly',
+        queryParameters: {"date": formattedDate},
+      );
+      return response;
+    } on DioException catch (e) {
+      logger.d("GET /api/leave/yearly exception : $e");
+      rethrow;
+    }
+  }
+
+  Future<Response> getYearlyLeaveUsedCount({required DateTime date}) async {
+    String formattedDate = DateFormat('yyyyMMdd').format(date);
+    try {
+      final response = await _dio.get(
+        '/api/leave/yearly/count',
+        queryParameters: {"date": formattedDate},
+      );
+      return response;
+    } on DioException catch (e) {
+      logger.d("GET /api/leave/yearly/count exception : $e");
+      rethrow;
+    }
+  }
 }

@@ -7,6 +7,7 @@ import 'package:leave_application/presentation/password_confirm_page.dart';
 import 'package:leave_application/presentation/profile_page.dart';
 import 'package:leave_application/presentation/login_page.dart';
 import 'package:leave_application/presentation/join_page.dart';
+import 'package:leave_application/presentation/yearly_page.dart';
 import 'package:leave_application/ad/ad_manager.dart';
 import 'package:leave_application/ad/att_service.dart';
 
@@ -32,6 +33,7 @@ final GoRouter _router = GoRouter(
       path: '/calendar',
       builder: (context, state) => const CalenderPage(),
     ),
+    GoRoute(path: '/yearly', builder: (context, state) => const YearlyPage()),
     GoRoute(
       path: '/profile/valid',
       builder: (context, state) => const PasswordConfirmPage(),

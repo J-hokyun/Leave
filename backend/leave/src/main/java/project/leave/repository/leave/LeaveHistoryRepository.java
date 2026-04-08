@@ -41,6 +41,15 @@ public interface LeaveHistoryRepository extends JpaRepository<LeaveHistory, Stri
     Optional<List<LeaveHistory>>findAllByUserId(@Param("userId") String userId);
 
     @Query(value = """
+            SELECT * 
+            FROM tb_leave_history
+            WHERE user_id = :userId
+            AND date LIKE LEFT(:year, 4) || '%'
+            ORDER BY date DESC
+            """, nativeQuery = true)
+    Optional<List<LeaveHistory>>findAllByUserIdAndyear(@Param("userId") String userId, @Param("year") String year);
+
+    @Query(value = """
         SELECT COUNT(*)
         FROM tb_leave_history
         WHERE user_id = :userId
@@ -185,4 +194,6 @@ public interface LeaveHistoryRepository extends JpaRepository<LeaveHistory, Stri
         @Param("year")String year,
         @Param("userId")String userId
     );
+
+
 }

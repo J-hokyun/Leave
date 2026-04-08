@@ -21,7 +21,6 @@ import project.leave.dto.leave.LeaveHistoryRequest;
 import project.leave.dto.leave.MonthlyListRequest;
 import project.leave.dto.leave.UsedHistoryRequest;
 import project.leave.dto.leave.UsedHistoryResponse;
-
 import project.leave.entity.leave.LeaveHistory;
 import project.leave.global.error.exception.LeaveCountOverException;
 
@@ -162,7 +161,69 @@ public class LeaveServiceTest {
 
         assertEquals("2.75", leaveCountsResponse.getUsed());
         assertEquals("12.25", leaveCountsResponse.getRemained());
+    }
 
+    @Test
+    @DisplayName("연도별 사용 연차 출력 테스트")
+    void printYearlyUsedDaysTest()
+    {
+        String testDate1 = "20260101";
+        String testDate2 = "20270101";
+
+        LeaveHistoryRequest historyRequest1 = LeaveHistoryRequest.builder() //2
+        .startDate("20260218")
+        .endDate("20260222")
+        .leaveTypeCode("0")
+        .leaveReason("휴가")
+        .build();
+
+        LeaveHistoryRequest historyRequest2 = LeaveHistoryRequest.builder() // 0.5
+        .startDate("20260219")
+        .endDate("20260219")
+        .leaveTypeCode("1")
+        .leaveReason("휴가")
+        .build();
+
+        LeaveHistoryRequest historyRequest3 = LeaveHistoryRequest.builder() //0.25
+        .startDate("20260220")
+        .endDate("20260220")
+        .leaveTypeCode("2")
+        .leaveReason("휴가")
+        .build();
+
+        LeaveHistoryRequest historyRequest4 = LeaveHistoryRequest.builder() //3
+        .startDate("20270218")
+        .endDate("20270222")
+        .leaveTypeCode("0")
+        .leaveReason("휴가")
+        .build();
+
+        LeaveHistoryRequest historyRequest5 = LeaveHistoryRequest.builder() // 0.5
+        .startDate("20270219")
+        .endDate("20270219")
+        .leaveTypeCode("1")
+        .leaveReason("휴가")
+        .build();
+
+        LeaveHistoryRequest historyRequest6 = LeaveHistoryRequest.builder() //0.25
+        .startDate("20270222")
+        .endDate("20270222")
+        .leaveTypeCode("2")
+        .leaveReason("휴가")
+        .build();
+
+        leaveService.saveLeaveHisory(historyRequest1, testUserId);
+        leaveService.saveLeaveHisory(historyRequest2, testUserId);
+        leaveService.saveLeaveHisory(historyRequest3, testUserId);
+        leaveService.saveLeaveHisory(historyRequest4, testUserId);
+        leaveService.saveLeaveHisory(historyRequest5, testUserId);
+        leaveService.saveLeaveHisory(historyRequest6, testUserId);
+
+        String leaveSumIn2026 = leaveService.sumUsedLeaveInYear(testUserId, testDate1);
+        String leaveSumIn2027 = leaveService.sumUsedLeaveInYear(testUserId, testDate2);
+
+        assertEquals(leaveSumIn2026, "2.75");
+        assertEquals(leaveSumIn2027, "3.75");
     }
     
     @Test
@@ -347,6 +408,65 @@ public class LeaveServiceTest {
         MonthlyListRequest request = MonthlyListRequest.builder().date("20260228").userId(testUserId).build();
 
         List<String>result = leaveService.getMonthlyList(request);
+        assertEquals(4, result.size());
+    }
+
+    @Test
+    @DisplayName("연도별 연차 사용 내역 조회 테스트")
+    void getYearlyListTest()
+    {
+        String testYear = "20260101";
+
+        LeaveHistoryRequest historyRequest1 = LeaveHistoryRequest.builder()
+        .startDate("20260215")
+        .endDate("20260215")
+        .leaveTypeCode("0")
+        .leaveReason("휴가")
+        .build();
+
+        LeaveHistoryRequest historyRequest2 = LeaveHistoryRequest.builder()
+        .startDate("20260216")
+        .endDate("20260216")
+        .leaveTypeCode("0")
+        .leaveReason("휴가")
+        .build();
+
+        LeaveHistoryRequest historyRequest3 = LeaveHistoryRequest.builder()
+        .startDate("20260217")
+        .endDate("20260217")
+        .leaveTypeCode("0")
+        .leaveReason("휴가")
+        .build();
+
+        LeaveHistoryRequest historyRequest4 = LeaveHistoryRequest.builder()
+        .startDate("20260218")
+        .endDate("20260218")
+        .leaveTypeCode("0")
+        .leaveReason("휴가")
+        .build();
+        
+        LeaveHistoryRequest historyRequest5 = LeaveHistoryRequest.builder()
+        .startDate("20250301")
+        .endDate("20250301")
+        .leaveTypeCode("0")
+        .leaveReason("휴가")
+        .build();
+        
+        LeaveHistoryRequest historyRequest6 = LeaveHistoryRequest.builder()
+        .startDate("20270301")
+        .endDate("20270301")
+        .leaveTypeCode("0")
+        .leaveReason("휴가")
+        .build();    
+
+        leaveService.saveLeaveHisory(historyRequest1, testUserId);
+        leaveService.saveLeaveHisory(historyRequest2, testUserId);
+        leaveService.saveLeaveHisory(historyRequest3, testUserId);
+        leaveService.saveLeaveHisory(historyRequest4, testUserId);
+        leaveService.saveLeaveHisory(historyRequest5, testUserId);
+        leaveService.saveLeaveHisory(historyRequest6, testUserId);
+
+        List<LeaveHistory>result = leaveService.getYearlyList(testUserId, testYear);
         assertEquals(4, result.size());
     }
     

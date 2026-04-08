@@ -9,22 +9,23 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import project.leave.entity.leave.LeaveHistory;
 
-/* 캘린더 화면(해당 날짜에 존재하는 연차 내역) 하단, 응답 dto */
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LeaveHistoryByDateResponse {
+public class YearlyListResponse {
     private UUID uuid;
+    private String date;
     private String leaveTypeCode;
     private String leaveTypeName;
     private String leaveReason;
 
-    public LeaveHistoryByDateResponse(LeaveHistory leaveHistory)
-    {
+    public YearlyListResponse(LeaveHistory leaveHistory){
         this.uuid = leaveHistory.getUuid();
         this.leaveTypeCode = leaveHistory.getLeaveTypeCode();
+        this.date = leaveHistory.getDate();
+        
         String rawReason = leaveHistory.getLeaveReason();
         if (rawReason == null || rawReason.trim().isEmpty()) {
             this.leaveReason = "사유없음";
@@ -41,5 +42,4 @@ public class LeaveHistoryByDateResponse {
             this.leaveTypeName = "반반차";
         }
     }
-
 }

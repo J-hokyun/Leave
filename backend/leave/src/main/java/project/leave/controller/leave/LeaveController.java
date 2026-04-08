@@ -13,6 +13,8 @@ import project.leave.dto.leave.MonthlyListRequest;
 import project.leave.dto.leave.MonthlyListResponse;
 import project.leave.dto.leave.UsedHistoryRequest;
 import project.leave.dto.leave.UsedHistoryResponse;
+import project.leave.dto.leave.YearlyListRequest;
+import project.leave.dto.leave.YearlyListResponse;
 import project.leave.entity.leave.LeaveHistory;
 import project.leave.service.leave.LeaveService;
 
@@ -98,6 +100,27 @@ public class LeaveController {
         
         return ResponseEntity.ok(listResponses);
     }
+
+    @GetMapping("/yearly")
+    public ResponseEntity<List<YearlyListResponse>> getYearlyList(@RequestParam("date") String date, @AuthenticationPrincipal String userId) {
+        log.debug("[LeaveController] GET /api/leave/yearly");
+        List<YearlyListResponse> listResponses = new LinkedList<>();
+        List<LeaveHistory> yearlyList = leaveService.getYearlyList(userId, date);
+        for (LeaveHistory history : yearlyList)
+        {
+            listResponses.add(new YearlyListResponse(history));
+        }
+        
+        return ResponseEntity.ok(listResponses);
+    }
+
+    @GetMapping("/yearly/count")
+    public ResponseEntity<?> getYearlyUsedCount(@RequestParam("date") String date, @AuthenticationPrincipal String userId) {
+        log.debug("[LeaveController] GET /api/leave/yearly/count");
+        String yearlySum = leaveService.sumUsedLeaveInYear(userId, date);
+        return ResponseEntity.ok(yearlySum);
+    }
+    
 
     @GetMapping("/history")
     public ResponseEntity<List<LeaveHistoryByDateResponse>>getHistoryByDate(@RequestParam("date") String date, @AuthenticationPrincipal String userId) {

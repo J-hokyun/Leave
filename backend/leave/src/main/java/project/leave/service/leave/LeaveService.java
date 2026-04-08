@@ -20,6 +20,7 @@ import project.leave.dto.leave.LeaveHistoryRequest;
 import project.leave.dto.leave.MonthlyListRequest;
 import project.leave.dto.leave.UsedHistoryRequest;
 import project.leave.dto.leave.UsedHistoryResponse;
+import project.leave.dto.leave.YearlyListRequest;
 import project.leave.entity.leave.LeaveHistory;
 import project.leave.global.error.exception.LeaveCountOverException;
 import project.leave.global.error.exception.ResourcesNotFoundException;
@@ -41,6 +42,7 @@ public class LeaveService {
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
     String curYear = String.valueOf(LocalDateTime.now().getYear());
+    DecimalFormat df = new DecimalFormat("###.##");
 
     /* 연차 사용 집계 로직 */
     public LeaveCountsResponse getUserLeaveCounts(String userId)
@@ -51,7 +53,7 @@ public class LeaveService {
         int totalCount = leaveTotRepository.findLeaveCountByUserIdAndYear(userId, curYear);
         Double remained = totalCount - used;
 
-        DecimalFormat df = new DecimalFormat("###.##");
+        // DecimalFormat df = new DecimalFormat("###.##");
 
         leaveCounts.setUsed(df.format(used));
         leaveCounts.setRemained(df.format(remained));
@@ -145,6 +147,12 @@ public class LeaveService {
         log.debug("[LeaveService] getMonthlyList");
         return leaveHistoryRepository.findAllByMounth(request.getDate(), request.getUserId());
     }
+
+    /* 연도별 연차 사용내역 조회 로직*/
+    public List<LeaveHistory>getYearlyList(String userId, String date){
+        log.debug("[] start get yearly history list userId : {}, year : {}", userId, date);
+        return leaveHistoryRepository.findAllByUserIdAndyear(userId, date).orElse(null);
+    }
     
     /* 특정 날짜에 존재하는 연차 내역 조회 로직  */
     public List<LeaveHistory> getHistoryListByDate(String date, String userId){
@@ -189,7 +197,7 @@ public class LeaveService {
     public Double calUsedLeave(String userId){
     log.debug("[LeaveService] try cal user leave sum for userId: {}", userId);
     Double leaveSum = 0.00;
-    String curYear = String.valueOf(LocalDate.now().getYear());
+    // String curYear = String.valueOf(LocalDate.now().getYear());
 
     List<Map<String, Object>> leaveTypeCounts;
     /* 연차 공휴일 포함여부 에따른 쿼리 분기 */
@@ -212,7 +220,35 @@ public class LeaveService {
 
     log.debug("[LeaveService] user {}'s total leave sum is : {}", userId, leaveSum);
     return leaveSum;
-}
+    }
+
+    /* 연도별 연차 사용갯수 집계하는 로직 */
+    public String sumUsedLeaveInYear(String userId, String date){
+
+        log.debug("[LeaveService] try sum used leave count in {} year serId: {}", date, userId);
+        Double leaveSum = 0.00;
+        String year = date.substring(0,4);
+        List<Map<String, Object>> leaveTypeCounts;
+        /* 연차 공휴일 포함여부 에따른 쿼리 분기 */
+        if (userRepository.findIsIncludeHolidayByUserId(userId).equals("N")){
+            leaveTypeCounts = leaveHistoryRepository.findAllTypeCountsByUserIdAndYearAndNotIncludeHoliday(year, userId);
+        }else{
+            leaveTypeCounts = leaveHistoryRepository.findAllTypeCountsByUserIdAndYearAndIncludeHoliday(year, userId);
+        }
+        Map<String, Double> weights = Map.of(
+            "0", 1.0,
+            "1", 0.5,
+            "2", 0.25
+        );
+        for (Map<String, Object> row : leaveTypeCounts) {
+            String typeCode = String.valueOf(row.get("leave_type_code"));
+            int count = ((Number) row.get("typeSum")).intValue();
+            Double weight = weights.getOrDefault(typeCode, 0.0);
+            leaveSum += (weight * count);
+        }
+        log.debug("[LeaveService] {} year {}'s total leave sum is : {}", year, userId, leaveSum);
+        return df.format(leaveSum);
+    }
 
     /* 연차 등록전, 등록하려는 연차 갯수 검증 로직 */
     private boolean validLeftLeaveCount(String userId, int weekDaysCount, String code){
