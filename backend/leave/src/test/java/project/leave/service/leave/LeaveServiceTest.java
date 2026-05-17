@@ -23,7 +23,7 @@ import project.leave.dto.leave.UsedHistoryRequest;
 import project.leave.dto.leave.UsedHistoryResponse;
 import project.leave.entity.leave.LeaveHistory;
 import project.leave.global.error.exception.LeaveCountOverException;
-
+import project.leave.global.error.exception.LeaveDateDupliaceException;
 import project.leave.repository.leave.LeaveHistoryRepository;
 
 
@@ -39,7 +39,7 @@ public class LeaveServiceTest {
 
     private String testUserId = "user2026032800003";
 
-    private String curYear = String.valueOf(LocalDateTime.now().getYear());
+    private String curYear = "2026";
 
     DecimalFormat df = new DecimalFormat("###.##");
 
@@ -140,15 +140,15 @@ public class LeaveServiceTest {
         .build();
 
         LeaveHistoryRequest historyRequest2 = LeaveHistoryRequest.builder() // 0.5
-        .startDate("20260219")
-        .endDate("20260219")
+        .startDate("20260223")
+        .endDate("20260223")
         .leaveTypeCode("1")
         .leaveReason("휴가")
         .build();
 
         LeaveHistoryRequest historyRequest3 = LeaveHistoryRequest.builder() //0.25
-        .startDate("20260220")
-        .endDate("20260220")
+        .startDate("20260224")
+        .endDate("20260224")
         .leaveTypeCode("2")
         .leaveReason("휴가")
         .build();
@@ -178,15 +178,15 @@ public class LeaveServiceTest {
         .build();
 
         LeaveHistoryRequest historyRequest2 = LeaveHistoryRequest.builder() // 0.5
-        .startDate("20260219")
-        .endDate("20260219")
+        .startDate("20260223")
+        .endDate("20260223")
         .leaveTypeCode("1")
         .leaveReason("휴가")
         .build();
 
         LeaveHistoryRequest historyRequest3 = LeaveHistoryRequest.builder() //0.25
-        .startDate("20260220")
-        .endDate("20260220")
+        .startDate("20260224")
+        .endDate("20260224")
         .leaveTypeCode("2")
         .leaveReason("휴가")
         .build();
@@ -199,15 +199,15 @@ public class LeaveServiceTest {
         .build();
 
         LeaveHistoryRequest historyRequest5 = LeaveHistoryRequest.builder() // 0.5
-        .startDate("20270219")
-        .endDate("20270219")
+        .startDate("20270223")
+        .endDate("20270223")
         .leaveTypeCode("1")
         .leaveReason("휴가")
         .build();
 
         LeaveHistoryRequest historyRequest6 = LeaveHistoryRequest.builder() //0.25
-        .startDate("20270222")
-        .endDate("20270222")
+        .startDate("20270224")
+        .endDate("20270224")
         .leaveTypeCode("2")
         .leaveReason("휴가")
         .build();
@@ -569,4 +569,33 @@ public class LeaveServiceTest {
         assertEquals(1, result4);
         assertEquals(3, result5);
     }
+
+    @Test
+    @DisplayName("연차 날짜 중복 저장 에러처리 테스트 [다건]")
+    void leaveDateDuplicateTest()
+    {
+        String startDate = curYear + "0309";
+        String endDate = curYear + "0310";
+
+        LeaveHistoryRequest historyRequest = LeaveHistoryRequest.builder()
+        .startDate(startDate)
+        .endDate(endDate)
+        .leaveTypeCode("0")
+        .leaveReason("휴가")
+        .build();
+
+        LeaveHistoryRequest historyDuplicateRequest = LeaveHistoryRequest.builder()
+        .startDate(startDate)
+        .endDate(startDate)
+        .leaveTypeCode("0")
+        .leaveReason("휴가")
+        .build();
+
+        leaveService.saveLeaveHisory(historyRequest, testUserId);
+
+        assertThrows(LeaveDateDupliaceException.class, () -> {
+            leaveService.saveLeaveHisory(historyDuplicateRequest, testUserId);
+        });
+
+    }    
 }

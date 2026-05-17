@@ -20,9 +20,9 @@ import project.leave.dto.leave.LeaveHistoryRequest;
 import project.leave.dto.leave.MonthlyListRequest;
 import project.leave.dto.leave.UsedHistoryRequest;
 import project.leave.dto.leave.UsedHistoryResponse;
-import project.leave.dto.leave.YearlyListRequest;
 import project.leave.entity.leave.LeaveHistory;
 import project.leave.global.error.exception.LeaveCountOverException;
+import project.leave.global.error.exception.LeaveDateDupliaceException;
 import project.leave.global.error.exception.ResourcesNotFoundException;
 import project.leave.repository.leave.HolidayRepository;
 import project.leave.repository.leave.LeaveHistoryRepository;
@@ -74,6 +74,7 @@ public class LeaveService {
 
         /* 주말 및 공휴일을 제외한 평일만 카운팅한 변수 */
         int weekDaysCount = calWeekDay(leaveRecordRequest.getStartDate(), leaveRecordRequest.getEndDate());
+
         if (!validLeftLeaveCount(userId, weekDaysCount, leaveRecordRequest.getLeaveTypeCode())){
             throw new LeaveCountOverException("잔여 연차가 부족합니다.");
         }
@@ -83,6 +84,13 @@ public class LeaveService {
         {
             String isHoliday = "N";
             String date = addDays(start, i);
+
+            // 이미 존재하는 날짜의 휴가인지 검증하는 로직 
+            if (leaveHistoryRepository.findAllByDateAndUserId(date, userId).size() > 0){
+                String formattedDate = date.substring(0, 4) + "-" + date.substring(4, 6) + "-" + date.substring(6, 8);
+                throw new LeaveDateDupliaceException(formattedDate + " 날짜에 이미 등록한 휴가가 존재합니다.");
+            }
+
             LocalDate localDate = LocalDate.parse(date, formatter);
             boolean isWeekend = (localDate.getDayOfWeek() == DayOfWeek.SATURDAY || 
                                 localDate.getDayOfWeek() == DayOfWeek.SUNDAY);
